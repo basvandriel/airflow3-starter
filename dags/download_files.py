@@ -56,6 +56,7 @@ def setup_workdir(**context):
     return workdir
 
 
+@debuggable
 def download_files_task(**context):
     """Download multiple files from the internet."""
     # Get workdir from previous task
@@ -130,6 +131,7 @@ def download_files_task(**context):
 #         raise
 
 
+@debuggable
 def cleanup_task(**context):
     """Clean up old files to free disk space."""
     workdir = context["ti"].xcom_pull(task_ids="setup_workdir", key="workdir")
@@ -142,6 +144,7 @@ def cleanup_task(**context):
     return removed_count
 
 
+@debuggable
 def verify_downloads(**context):
     """Verify that files were downloaded successfully."""
     downloaded_files = context["ti"].xcom_pull(task_ids="download_files_task")

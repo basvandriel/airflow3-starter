@@ -43,14 +43,19 @@ from typing import Callable
 _VSCODE_HOST = os.environ.get("DEBUGPY_HOST", "host.docker.internal")
 
 
-def _vscode_is_listening(host: str, port: int) -> bool:
+def _vscode_is_listening(
+    host: str, port: int, retries: int = 20, delay: float = 0.5
+) -> bool:
     import socket
+    import time
 
-    try:
-        with socket.create_connection((host, port), timeout=0.5):
-            return True
-    except OSError:
-        return False
+    for _ in range(retries):
+        try:
+            with socket.create_connection((host, port), timeout=1.0):
+                return True
+        except OSError:
+            time.sleep(delay)
+    return False
 
 
 def attach_debugpy(port: int = 5683) -> None:
@@ -63,9 +68,12 @@ def attach_debugpy(port: int = 5683) -> None:
 
         if not debugpy.is_client_connected():
             debugpy.connect((_VSCODE_HOST, port))
+            debugpy.debug_this_thread()
             debugpy.wait_for_client()  # wait until VS Code finishes sending breakpoint config
-    except ImportError:
-        pass  # debugpy not installed — skip silently
+        else:
+            debugpy.debug_this_thread()
+    except Exception:
+        pass  # never let debugpy errors affect task execution
 
 
 def debuggable(fn: Callable | None = None, *, port: int = 5683) -> Callable:
