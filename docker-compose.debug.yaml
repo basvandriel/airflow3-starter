@@ -44,7 +44,7 @@ services:
       - "5682:5682"
 
   airflow-worker:
-    # AIRFLOW_DEBUG=1 activates @debuggable / attach_debugpy() in task callables.
+    # AIRFLOW_DEBUG=1 activates the debug_plugin listener on every task.
     # Start "Airflow: Debug Worker Tasks" in VS Code before triggering a run.
     environment:
       AIRFLOW_DEBUG: "1"
