@@ -1,0 +1,50 @@
+# docker-compose.debug.yaml — debugpy overlay for Airflow services
+#
+# Usage:
+#   docker compose -f docker-compose.yaml -f docker-compose.debug.yaml up
+#
+# Services (scheduler/dag-processor/apiserver/triggerer) are wrapped with
+# debugpy in listen mode on dedicated ports — VS Code *connects* to them.
+#
+# Worker tasks use the reverse model: VS Code *listens* on port 5683 and each
+# task process calls debugpy.connect() back to the host.  Start
+# "Airflow: Debug Worker Tasks" in VS Code BEFORE triggering a DAG run.
+#
+# Port assignments:
+#   5679  airflow-scheduler
+#   5680  airflow-dag-processor
+#   5681  airflow-apiserver
+#   5682  airflow-triggerer
+#   5683  host (VS Code) — worker tasks connect back to this port
+
+services:
+
+  airflow-scheduler:
+    entrypoint: ["/usr/bin/dumb-init", "--"]
+    command: ["python", "-Xfrozen_modules=off", "-m", "debugpy", "--listen", "0.0.0.0:5679", "-m", "airflow", "scheduler"]
+    ports:
+      - "5679:5679"
+
+  airflow-dag-processor:
+    entrypoint: ["/usr/bin/dumb-init", "--"]
+    command: ["python", "-Xfrozen_modules=off", "-m", "debugpy", "--listen", "0.0.0.0:5680", "-m", "airflow", "dag-processor"]
+    ports:
+      - "5680:5680"
+
+  airflow-apiserver:
+    entrypoint: ["/usr/bin/dumb-init", "--"]
+    command: ["python", "-Xfrozen_modules=off", "-m", "debugpy", "--listen", "0.0.0.0:5681", "-m", "airflow", "api-server"]
+    ports:
+      - "5681:5681"
+
+  airflow-triggerer:
+    entrypoint: ["/usr/bin/dumb-init", "--"]
+    command: ["python", "-Xfrozen_modules=off", "-m", "debugpy", "--listen", "0.0.0.0:5682", "-m", "airflow", "triggerer"]
+    ports:
+      - "5682:5682"
+
+  airflow-worker:
+    # AIRFLOW_DEBUG=1 activates @debuggable / attach_debugpy() in task callables.
+    # Start "Airflow: Debug Worker Tasks" in VS Code before triggering a run.
+    environment:
+      AIRFLOW_DEBUG: "1"

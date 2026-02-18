@@ -10,6 +10,7 @@ from airflow import DAG
 from airflow.providers.standard.operators.python import PythonOperator
 
 # Import our custom utilities
+from utils.debug_utils import debuggable
 from utils.download_utils import (
     create_workdir,
     download_multiple_files_concurrent,
@@ -46,8 +47,8 @@ dag = DAG(
 )
 
 
+@debuggable
 def setup_workdir(**context):
-    """Create working directory and return its path."""
     workdir = create_workdir("workdir")
     logger.info(f"Created working directory: {workdir}")
     # Store workdir in XCom for use by other tasks
@@ -55,6 +56,7 @@ def setup_workdir(**context):
     return workdir
 
 
+@debuggable
 def download_files_task(**context):
     """Download multiple files from the internet."""
     # Get workdir from previous task
