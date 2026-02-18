@@ -9,17 +9,20 @@ import sys
 import os
 
 # Add the dags directory to the path so we can import our modules
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'dags'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "dags"))
 
 from utils.download_utils import download_file_optimized_sync, get_file_size_mb
 
 # Set up logging like in the DAG
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+
 
 def test_download_large_file_task():
     """Simulate the download_large_file_task from the DAG."""
-    workdir = os.path.join(os.path.dirname(__file__), 'workdir')
+    workdir = os.path.join(os.path.dirname(__file__), "workdir")
     os.makedirs(workdir, exist_ok=True)
 
     # Use a smaller test file for debugging but same logic
@@ -33,7 +36,9 @@ def test_download_large_file_task():
         # Only log progress every 10MB to avoid spam
         if downloaded - progress_data["last_reported"] >= 10 * 1024 * 1024:
             percent = (downloaded / total) * 100 if total > 0 else 0
-            logger.info(f"Download progress: {downloaded}/{total} bytes ({percent:.1f}%)")
+            logger.info(
+                f"Download progress: {downloaded}/{total} bytes ({percent:.1f}%)"
+            )
             progress_data["last_reported"] = downloaded
 
     logger.info(f"Starting large file download: {filename}")
@@ -63,6 +68,7 @@ def test_download_large_file_task():
     except Exception as e:
         logger.error(f"Failed to download large file: {e}")
         raise
+
 
 if __name__ == "__main__":
     test_download_large_file_task()

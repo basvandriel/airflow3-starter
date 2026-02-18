@@ -101,7 +101,9 @@ async def download_file_with_progress_async(
                         f.write(chunk)
                         downloaded += len(chunk)
                         if progress_callback and total_size > 0:
-                            print(f"DEBUG: Calling progress callback: {downloaded}/{total_size}")  # Debug log
+                            print(
+                                f"DEBUG: Calling progress callback: {downloaded}/{total_size}"
+                            )  # Debug log
                             progress_callback(downloaded, total_size)
 
     print(f"DEBUG: Download completed: {filepath}")  # Debug log
@@ -143,7 +145,9 @@ async def check_range_support(url: str, timeout: int = 10) -> bool:
         True if range requests are supported
     """
     try:
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=timeout)
+        ) as session:
             async with session.head(url) as response:
                 return response.headers.get("Accept-Ranges", "").lower() == "bytes"
     except Exception:
@@ -178,7 +182,9 @@ async def download_file_parallel_chunks(
     filepath = os.path.join(workdir, filename)
 
     # First, get the file size
-    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
+    async with aiohttp.ClientSession(
+        timeout=aiohttp.ClientTimeout(total=timeout)
+    ) as session:
         async with session.head(url) as response:
             response.raise_for_status()
             total_size = int(response.headers.get("Content-Length", 0))
@@ -207,7 +213,9 @@ async def download_file_parallel_chunks(
         start, end = chunk_range
         headers = {"Range": f"bytes={start}-{end}"}
 
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=timeout)
+        ) as session:
             async with session.get(url, headers=headers) as response:
                 response.raise_for_status()
                 data = await response.read()
@@ -215,7 +223,9 @@ async def download_file_parallel_chunks(
 
     # Download all chunks concurrently
     print("DEBUG: Starting concurrent chunk downloads")  # Debug log
-    tasks = [download_chunk(chunk_range, i) for i, chunk_range in enumerate(chunk_ranges)]
+    tasks = [
+        download_chunk(chunk_range, i) for i, chunk_range in enumerate(chunk_ranges)
+    ]
     results = await asyncio.gather(*tasks)
 
     # Sort results by chunk index and write to file
@@ -228,7 +238,9 @@ async def download_file_parallel_chunks(
             f.write(data)
             downloaded += len(data)
             if progress_callback:
-                print(f"DEBUG: Calling progress callback: {downloaded}/{total_size}")  # Debug log
+                print(
+                    f"DEBUG: Calling progress callback: {downloaded}/{total_size}"
+                )  # Debug log
                 progress_callback(downloaded, total_size)
 
     print(f"DEBUG: Parallel download completed: {filepath}")  # Debug log
@@ -266,8 +278,13 @@ async def download_file_optimized(
         print("DEBUG: Using parallel chunk downloads")  # Debug log
         # Use parallel chunk downloads for better performance
         return await download_file_parallel_chunks(
-            url, filename, workdir, num_chunks=4, chunk_size=chunk_size,
-            timeout=timeout, progress_callback=progress_callback
+            url,
+            filename,
+            workdir,
+            num_chunks=4,
+            chunk_size=chunk_size,
+            timeout=timeout,
+            progress_callback=progress_callback,
         )
     else:
         print("DEBUG: Using regular async download")  # Debug log
@@ -277,7 +294,9 @@ async def download_file_optimized(
         )
 
 
-async def download_multiple_files_async(file_specs: list, workdir: str, **kwargs) -> list:
+async def download_multiple_files_async(
+    file_specs: list, workdir: str, **kwargs
+) -> list:
     """
     Download multiple files concurrently using aiohttp.
 
@@ -289,6 +308,7 @@ async def download_multiple_files_async(file_specs: list, workdir: str, **kwargs
     Returns:
         List of paths to downloaded files
     """
+
     async def download_single_file(spec):
         """Download a single file and return its path."""
         url = spec["url"]
@@ -311,7 +331,9 @@ async def download_multiple_files_async(file_specs: list, workdir: str, **kwargs
     return results
 
 
-def download_multiple_files_concurrent(file_specs: list, workdir: str, **kwargs) -> list:
+def download_multiple_files_concurrent(
+    file_specs: list, workdir: str, **kwargs
+) -> list:
     """
     Download multiple files concurrently (synchronous wrapper).
 

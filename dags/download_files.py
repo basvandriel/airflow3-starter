@@ -93,7 +93,9 @@ def download_large_file_task(**context):
         # Only log progress every 10MB to avoid spam
         if downloaded - progress_data["last_reported"] >= 10 * 1024 * 1024:
             percent = (downloaded / total) * 100 if total > 0 else 0
-            logger.info(f"Download progress: {downloaded}/{total} bytes ({percent:.1f}%)")
+            logger.info(
+                f"Download progress: {downloaded}/{total} bytes ({percent:.1f}%)"
+            )
             progress_data["last_reported"] = downloaded
 
     logger.info(f"Starting large file download: {filename}")
