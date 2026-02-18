@@ -12,3 +12,4 @@ wheels/
 # Airflow working directory
 workdir/
 logs
+.env
