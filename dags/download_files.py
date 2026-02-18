@@ -12,8 +12,8 @@ from airflow.providers.standard.operators.python import PythonOperator
 # Import our custom utilities
 from utils.download_utils import (
     create_workdir,
-    download_multiple_files,
-    download_file_with_progress,
+    download_multiple_files_concurrent,
+    download_file_optimized_sync,
     get_file_size_mb,
     cleanup_old_files,
 )
@@ -67,7 +67,7 @@ def download_files_task(**context):
     ]
 
     logger.info(f"Downloading files to: {workdir}")
-    downloaded_files = download_multiple_files(file_specs, workdir)
+    downloaded_files = download_multiple_files_concurrent(file_specs, workdir)
 
     logger.info(f"Downloaded {len(downloaded_files)} files:")
     for filepath in downloaded_files:
@@ -86,17 +86,27 @@ def download_large_file_task(**context):
     large_file_url = "https://vault.centos.org/7.9.2009/isos/x86_64/CentOS-7-x86_64-DVD-2009.iso"  # ~4GB file
     filename = "centos.iso"
 
+    progress_data = {"last_reported": 0}
+
     def progress_callback(downloaded, total):
         """Progress callback for large file downloads."""
-        percent = (downloaded / total) * 100 if total > 0 else 0
-        logger.info(f"Download progress: {downloaded}/{total} bytes ({percent:.1f}%)")
+        # Only log progress every 10MB to avoid spam
+        if downloaded - progress_data["last_reported"] >= 10 * 1024 * 1024:
+            percent = (downloaded / total) * 100 if total > 0 else 0
+            logger.info(f"Download progress: {downloaded}/{total} bytes ({percent:.1f}%)")
+            progress_data["last_reported"] = downloaded
 
     logger.info(f"Starting large file download: {filename}")
     logger.info(f"URL: {large_file_url}")
+    logger.info(f"Workdir: {workdir}")
+    logger.info("About to call progress callback test...")
+    progress_callback(0, 100)  # Test call
+    logger.info("Progress callback test completed")
 
     try:
-        # For large files, use streaming download with progress
-        filepath = download_file_with_progress(
+        # For large files, use optimized download (parallel chunks if supported)
+        logger.info("Calling download_file_optimized_sync...")
+        filepath = download_file_optimized_sync(
             url=large_file_url,
             filename=filename,
             workdir=workdir,
@@ -104,7 +114,7 @@ def download_large_file_task(**context):
             timeout=3600,  # 1 hour timeout
             progress_callback=progress_callback,
         )
-
+        logger.info("Download completed, checking file...")
         size_mb = get_file_size_mb(filepath)
         logger.info(
             f"Successfully downloaded large file: {filepath} ({size_mb:.2f} MB)"
