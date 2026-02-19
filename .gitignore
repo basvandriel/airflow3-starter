@@ -13,3 +13,7 @@ wheels/
 workdir/
 logs
 .env
+
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/settings.json
