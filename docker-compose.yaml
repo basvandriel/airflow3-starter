@@ -319,6 +319,7 @@ services:
     <<: *airflow-common
     # Debug-only container: same environment as other services but runs no Airflow processes.
     # Use this for isolated dag.test() debugging with LocalExecutor or as worker alternative.
+    entrypoint: []
     command: ["tail", "-f", "/dev/null"]
     profiles:
       - debug
