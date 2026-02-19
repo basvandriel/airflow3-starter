@@ -38,9 +38,6 @@ debugpy.listen(("0.0.0.0", PORT))
 print("wait_for_client", file=sys.stderr, flush=True)
 debugpy.wait_for_client()
 
-# pydevd is vendored inside debugpy and was already imported by it internally.
-import pydevd  # noqa: E402  (added to sys.path by debugpy.listen)
-
 _main = threading.current_thread()
 
 
