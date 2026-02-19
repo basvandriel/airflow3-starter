@@ -169,6 +169,8 @@ services:
   airflow-worker:
     <<: *airflow-common
     command: celery worker
+    ports:
+      - "5683:5683"
     healthcheck:
       # yamllint disable rule:line-length
       test:
