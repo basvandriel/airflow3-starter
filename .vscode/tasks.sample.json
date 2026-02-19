@@ -1,0 +1,94 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Airflow: restart worker",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.yaml restart airflow-worker",
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Airflow: Kill port 5683",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.yaml exec -T airflow-worker pkill -f debugpy || true",
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Airflow: Kill port 5684",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.yaml --profile debug restart airflow-debug",
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      // Convenience task: kills port 5683 then starts debugpy in one go (worker).
+      "label": "Airflow: Debug (download_files)",
+      "dependsOn": [
+        "Airflow: Kill port 5683",
+        "Airflow: Start debugpy (download_files)"
+      ],
+      "dependsOrder": "sequence",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Airflow: Start debugpy background (download_files)",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.yaml exec -T airflow-worker python -Xfrozen_modules=off /opt/airflow/dags/utils/debug_runner.py /opt/airflow/dags/download_files.py",
+      "isBackground": true,
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": {
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "wait_for_client"
+        }
+      }
+    },
+    {
+      "label": "Airflow: Start debugpy (download_files)",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.yaml exec -T airflow-worker python -Xfrozen_modules=off /opt/airflow/dags/utils/debug_runner.py /opt/airflow/dags/download_files.py",
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      // Convenience task for the isolated debug container (port 5684).
+      // Restarts the container to clear the port, then starts debugpy.
+      "label": "Airflow: Debug (download_files, debug container)",
+      "dependsOn": [
+        "Airflow: Kill port 5684",
+        "Airflow: Start debugpy background (download_files, debug container)"
+      ],
+      "dependsOrder": "sequence",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      // Background variant for the isolated airflow-debug container.
+      // VS Code's preLaunchTask waits for "wait_for_client" then auto-attaches on port 5684.
+      "label": "Airflow: Start debugpy background (download_files, debug container)",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.yaml --profile debug exec -T -e DEBUGPY_PORT=5684 airflow-debug python -Xfrozen_modules=off /opt/airflow/dags/utils/debug_runner.py /opt/airflow/dags/download_files.py",
+      "isBackground": true,
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": {
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "wait_for_client"
+        }
+      }
+    }
+  ]
+}
