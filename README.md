@@ -109,11 +109,6 @@ docker compose -f docker-compose.yaml -f docker-compose.debug.yaml exec -T airfl
 
 2. Start debugpy in the worker (blocks until VS Code attaches):
 ```bash
-docker compose -f docker-compose.yaml -f docker-compose.debug.yaml exec -T airflow-worker python -Xfrozen_modules=off -m debugpy --log-to-stderr --log-to /tmp/debugpy-logs --listen 0.0.0.0:5683 --wait-for-client /opt/airflow/dags/download_files.py
-
-
-
-
 docker compose -f docker-compose.yaml -f docker-compose.debug.yaml exec -T airflow-worker python -Xfrozen_modules=off -m debugpy --log-to-stderr --log-to /tmp/debugpy-logs --listen 0.0.0.0:5683 --wait-for-client /opt/airflow/dags/utils/debug_runner.py /opt/airflow/dags/download_files.py
 ```
 
