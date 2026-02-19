@@ -1,73 +1,71 @@
 """
 Debugpy entry point for Airflow DAGs.
 
-Usage: python -m debugpy --listen ... debug_runner.py <dag_file.py>
+Usage: python -Xfrozen_modules=off dags/utils/debug_runner.py <dag_file.py>
 
-In attach/listen mode VS Code sets suspend_policy="ALL" on every breakpoint,
-which freezes all threads including Airflow's supervisor IPC thread
-(_handle_socket_comms). With that frozen the session hangs. Marking threads
-with is_pydev_daemon_thread=True tells pydevd to exclude them from suspension.
-We patch Thread.start so it applies automatically to every thread dag.test()
-spawns, without touching DAG files or Airflow internals.
+Owns the full debugpy lifecycle. After wait_for_client() we mark every background
+thread with BOTH is_pydev_daemon_thread AND pydev_do_not_trace.
+
+Why both flags?
+  is_pydev_daemon_thread — skips the thread in suspend_all_threads(), process_internal_commands()
+  pydev_do_not_trace     — the ONLY flag checked inside trace_dispatch() itself
+                           (pydevd calls threading.settrace(trace_dispatch) globally,
+                            so every new thread gets the trace function automatically;
+                            without this flag trace_dispatch runs on the thread and
+                            may try to suspend it)
+
+Why PYDEVD_USE_SYS_MONITORING=false?
+  Python 3.12 defaults to sys.monitoring instead of sys.settrace for pydevd callbacks.
+  In sys.monitoring mode, monitoring is per-code-object (global across threads),
+  and the thread-level flags (pydev_do_not_trace) live in trace_dispatch_regular.py
+  which is bypassed entirely.  Forcing sys.settrace restores the code path where
+  our background-thread flags actually work.
 """
 
 import os
+
+# Must be set before `import debugpy` — pydevd_constants.py reads it at import time.
+os.environ.setdefault("PYDEVD_USE_SYS_MONITORING", "false")
 import sys
 import threading
 import runpy
+import debugpy
 
-_original_start = threading.Thread.start
+PORT = int(os.environ.get("DEBUGPY_PORT", 5683))
+debugpy.listen(("0.0.0.0", PORT))
+
+# Signal VS Code's problemMatcher, then wait for the client to attach.
+print("wait_for_client", file=sys.stderr, flush=True)
+debugpy.wait_for_client()
+
+# pydevd is vendored inside debugpy and was already imported by it internally.
+import pydevd  # noqa: E402  (added to sys.path by debugpy.listen)
+
+_main = threading.current_thread()
 
 
-def _patched_start(self: threading.Thread, *args, **kwargs) -> None:
-    _original_start(self, *args, **kwargs)
-    # pydevd/debugpy extension point: mark this thread so the debugger does not suspend it.
-    self.is_pydev_daemon_thread = True  # type: ignore[attr-defined]
+def _mark_background_thread(t: threading.Thread) -> None:
+    """Mark a non-main thread so pydevd ignores it completely."""
+    t.is_pydev_daemon_thread = True  # type: ignore[attr-defined]  skips suspend / internal cmds
+    t.pydev_do_not_trace = True  # type: ignore[attr-defined]  skips trace_dispatch
 
 
-threading.Thread.start = _patched_start  # type: ignore[method-assign]
+# Mark all currently-running background threads.
+for _t in threading.enumerate():
+    if _t is not _main:
+        _mark_background_thread(_t)
 
-# Airflow's VariableAccessor and context objects may make live API/DB calls for ANY attribute
-# access, including dunders like __iter__ that pydevd inspects at breakpoints.
-# Raise AttributeError for dunder keys to prevent spurious errors and slowdowns.
+# Patch Thread.start so every future background thread is also marked
+# before its first Python instruction is executed.
+_original_thread_start = threading.Thread.start
 
-# Patch VariableAccessor (context['var'])
-try:
-    from airflow.sdk.execution_time.context import VariableAccessor as _VariableAccessor
-    _orig_variable_getattr = _VariableAccessor.__getattr__
-    def _patched_variable_getattr(self: _VariableAccessor, key: str):  # type: ignore[override]
-        if key.startswith("__") and key.endswith("__"):
-            raise AttributeError(key)
-        return _orig_variable_getattr(self, key)
-    _VariableAccessor.__getattr__ = _patched_variable_getattr  # type: ignore[method-assign]
-except ImportError:
-    pass
 
-# Patch TaskInstance (context['ti']) if it has problematic __getattr__
-try:
-    from airflow.models.taskinstance import TaskInstance as _TaskInstance
-    if hasattr(_TaskInstance, '__getattr__'):
-        _orig_ti_getattr = _TaskInstance.__getattr__
-        def _patched_ti_getattr(self: _TaskInstance, key: str):  # type: ignore[override]
-            if key.startswith("__") and key.endswith("__"):
-                raise AttributeError(key)
-            return _orig_ti_getattr(self, key)
-        _TaskInstance.__getattr__ = _patched_ti_getattr  # type: ignore[method-assign]
-except (ImportError, AttributeError):
-    pass
+def _patched_thread_start(self, *args, **kwargs) -> None:  # type: ignore[override]
+    _mark_background_thread(self)
+    _original_thread_start(self, *args, **kwargs)
 
-# Patch DagRun (context['dag_run']) if it has problematic __getattr__  
-try:
-    from airflow.models.dagrun import DagRun as _DagRun
-    if hasattr(_DagRun, '__getattr__'):
-        _orig_dagrun_getattr = _DagRun.__getattr__
-        def _patched_dagrun_getattr(self: _DagRun, key: str):  # type: ignore[override]
-            if key.startswith("__") and key.endswith("__"):
-                raise AttributeError(key)
-            return _orig_dagrun_getattr(self, key)
-        _DagRun.__getattr__ = _patched_dagrun_getattr  # type: ignore[method-assign]
-except (ImportError, AttributeError):
-    pass
+
+threading.Thread.start = _patched_thread_start  # type: ignore[method-assign]
 
 dag_path = sys.argv[1]
 sys.path.insert(0, os.path.dirname(os.path.abspath(dag_path)))

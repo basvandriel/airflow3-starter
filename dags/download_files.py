@@ -9,6 +9,7 @@ from utils.download_utils import (
     create_workdir,
     get_file_size_mb,
     cleanup_old_files,
+    download_multiple_files_concurrent,
 )
 
 # Set up logging
