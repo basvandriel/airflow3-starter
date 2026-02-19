@@ -1,8 +1,3 @@
-"""
-DAG for downloading files from the internet using Python operators.
-Demonstrates modular design with utility functions and large file handling.
-"""
-
 import os
 import logging
 from datetime import datetime, timedelta
@@ -10,11 +5,9 @@ from airflow import DAG
 from airflow.providers.standard.operators.python import PythonOperator
 
 # Import our custom utilities
-from utils.debug_utils import debuggable
 from utils.download_utils import (
     create_workdir,
     download_multiple_files_concurrent,
-    download_file_optimized_sync,
     get_file_size_mb,
     cleanup_old_files,
 )
@@ -47,7 +40,6 @@ dag = DAG(
 )
 
 
-@debuggable
 def setup_workdir(**context):
     workdir = create_workdir("workdir")
     logger.info(f"Created working directory: {workdir}")
@@ -56,7 +48,6 @@ def setup_workdir(**context):
     return workdir
 
 
-@debuggable
 def download_files_task(**context):
     """Download multiple files from the internet."""
     # Get workdir from previous task
@@ -79,59 +70,6 @@ def download_files_task(**context):
     return downloaded_files
 
 
-# def download_large_file_task(**context):
-#     """Download a large file with progress monitoring."""
-#     workdir = context["ti"].xcom_pull(task_ids="setup_workdir", key="workdir")
-
-#     # Example: Download a large test file (Ubuntu ISO for demo - replace with your actual large file)
-#     # For testing, we'll use a smaller file but demonstrate the pattern
-#     large_file_url = "https://vault.centos.org/7.9.2009/isos/x86_64/CentOS-7-x86_64-DVD-2009.iso"  # ~4GB file
-#     filename = "centos.iso"
-
-#     progress_data = {"last_reported": 0}
-
-#     def progress_callback(downloaded, total):
-#         """Progress callback for large file downloads."""
-#         # Only log progress every 10MB to avoid spam
-#         if downloaded - progress_data["last_reported"] >= 10 * 1024 * 1024:
-#             percent = (downloaded / total) * 100 if total > 0 else 0
-#             logger.info(
-#                 f"Download progress: {downloaded}/{total} bytes ({percent:.1f}%)"
-#             )
-#             progress_data["last_reported"] = downloaded
-
-#     logger.info(f"Starting large file download: {filename}")
-#     logger.info(f"URL: {large_file_url}")
-#     logger.info(f"Workdir: {workdir}")
-#     logger.info("About to call progress callback test...")
-#     progress_callback(0, 100)  # Test call
-#     logger.info("Progress callback test completed")
-
-#     try:
-#         # For large files, use optimized download (parallel chunks if supported)
-#         logger.info("Calling download_file_optimized_sync...")
-#         filepath = download_file_optimized_sync(
-#             url=large_file_url,
-#             filename=filename,
-#             workdir=workdir,
-#             chunk_size=1024 * 1024,  # 1MB chunks for large files
-#             timeout=3600,  # 1 hour timeout
-#             progress_callback=progress_callback,
-#         )
-#         logger.info("Download completed, checking file...")
-#         size_mb = get_file_size_mb(filepath)
-#         logger.info(
-#             f"Successfully downloaded large file: {filepath} ({size_mb:.2f} MB)"
-#         )
-
-#         return filepath
-
-#     except Exception as e:
-#         logger.error(f"Failed to download large file: {e}")
-#         raise
-
-
-@debuggable
 def cleanup_task(**context):
     """Clean up old files to free disk space."""
     workdir = context["ti"].xcom_pull(task_ids="setup_workdir", key="workdir")
@@ -144,7 +82,6 @@ def cleanup_task(**context):
     return removed_count
 
 
-@debuggable
 def verify_downloads(**context):
     """Verify that files were downloaded successfully."""
     downloaded_files = context["ti"].xcom_pull(task_ids="download_files_task")
@@ -188,3 +125,6 @@ verify_task = PythonOperator(
 setup_workdir_task >> download_task
 download_task >> verify_task
 verify_task >> cleanup_task_op
+
+if __name__ == "__main__":
+    dag.test()

@@ -6,16 +6,17 @@
 # Services (scheduler/dag-processor/apiserver/triggerer) are wrapped with
 # debugpy in listen mode on dedicated ports — VS Code *connects* to them.
 #
-# Worker tasks use the reverse model: VS Code *listens* on port 5683 and each
-# task process calls debugpy.connect() back to the host.  Start
-# "Airflow: Debug Worker Tasks" in VS Code BEFORE triggering a DAG run.
+# Worker DAG debugging:
+#   - Press F5 in VS Code on any DAG file (config: "Airflow: Debug Tasks (active file)")
+#   - Pre-launch task starts debugpy inside the worker: --listen 0.0.0.0:5683 --wait-for-client
+#   - VS Code connects on localhost:5683 -> debugpy sends configurationDone -> dag.test() runs
 #
 # Port assignments:
 #   5679  airflow-scheduler
 #   5680  airflow-dag-processor
 #   5681  airflow-apiserver
 #   5682  airflow-triggerer
-#   5683  host (VS Code) — worker tasks connect back to this port
+#   5683  airflow-worker (dag.test() debugpy sessions)
 
 services:
 
@@ -44,7 +45,7 @@ services:
       - "5682:5682"
 
   airflow-worker:
-    # AIRFLOW_DEBUG=1 activates the debug_plugin listener on every task.
-    # Start "Airflow: Debug Worker Tasks" in VS Code before triggering a run.
-    environment:
-      AIRFLOW_DEBUG: "1"
+    # Port 5683 is for dag.test() debugpy sessions launched via the
+    # "Airflow: Debug Tasks (active file)" VS Code config (F5 on any DAG file).
+    ports:
+      - "5683:5683"

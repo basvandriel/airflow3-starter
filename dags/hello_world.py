@@ -28,3 +28,6 @@ hello_task = BashOperator(
     bash_command='echo "Hello, World!"',
     dag=dag,
 )
+
+if __name__ == "__main__":
+    dag.test()

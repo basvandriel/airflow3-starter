@@ -1,0 +1,988 @@
+m1 ➜ ~/tryout/airflow3-starter docker compose -f docker-compose.yaml -f docker-compose.debug.yaml exec -T airflow-worker python -Xfrozen_modules=off -m debugpy --log-to-stderr --listen 0.0.0.0:5683 --wait-for-client /opt/airflow/dags/download_files.py
+
+I+00000.189: Initial environment:
+             
+             System paths:
+                 sys.executable: /home/airflow/.local/bin/python(/usr/python/bin/python3.12)
+                 sys.prefix: /home/airflow/.local
+                 sys.base_prefix: /usr/python
+                 sys.real_prefix: <missing>
+                 site.getsitepackages(): /home/airflow/.local/lib/python3.12/site-packages
+                 site.getusersitepackages(): /home/airflow/.local/lib/python3.12/site-packages
+                 sys.path (site-packages): /home/airflow/.local/lib/python3.12/site-packages
+                 sysconfig.get_path('stdlib'): /usr/python/lib/python3.12
+                 sysconfig.get_path('platstdlib'): /home/airflow/.local/lib/python3.12
+                 sysconfig.get_path('purelib'): /home/airflow/.local/lib/python3.12/site-packages
+                 sysconfig.get_path('platlib'): /home/airflow/.local/lib/python3.12/site-packages
+                 sysconfig.get_path('include'): /usr/python/include/python3.12
+                 sysconfig.get_path('scripts'): /home/airflow/.local/bin
+                 sysconfig.get_path('data'): /home/airflow/.local
+                 os.__file__: /usr/python/lib/python3.12/os.py
+                 threading.__file__: /usr/python/lib/python3.12/threading.py
+                 debugpy.__file__: /home/airflow/.local/lib/python3.12/site-packages/debugpy/__init__.py
+             
+             Installed packages:
+                 tzdata==2025.3
+                 build==1.4.0
+                 hf-xet==1.2.0
+                 SQLAlchemy-Utils==0.42.1
+                 google-cloud-texttospeech==2.34.0
+                 google-cloud-datacatalog==3.29.0
+                 opentelemetry-exporter-otlp-proto-common==1.27.0
+                 watchtower==3.4.0
+                 google-cloud-secret-manager==2.26.0
+                 tqdm==4.67.2
+                 click-repl==0.3.0
+                 apache-airflow-providers-common-sql==1.30.4
+                 celery==5.6.2
+                 azure-synapse-artifacts==0.21.0
+                 colorful==0.5.8
+                 starlette==0.48.0
+                 opencensus==0.11.4
+                 starkbank-ecdsa==2.2.0
+                 Authlib==1.6.6
+                 apache-airflow-providers-smtp==2.4.2
+                 opentelemetry-sdk==1.27.0
+                 jiter==0.13.0
+                 google-cloud-build==3.35.0
+                 gitdb==4.0.12
+                 gcsfs==2026.1.0
+                 google-cloud-videointelligence==2.18.0
+                 huggingface_hub==1.3.7
+                 azure-batch==14.2.0
+                 beautifulsoup4==4.14.3
+                 Flask-JWT-Extended==4.7.1
+                 aiobotocore==3.1.1
+                 httpx==0.28.1
+                 python-slugify==8.0.4
+                 websockets==15.0.1
+                 google-cloud-managedkafka==0.3.0
+                 kombu==5.6.2
+                 adlfs==2025.8.0
+                 jmespath==0.10.0
+                 docker==7.1.0
+                 Flask-WTF==1.2.2
+                 scikit-learn==1.8.0
+                 apache-airflow-providers-mysql==6.4.2
+                 apache-airflow-providers-git==0.2.2
+                 alembic==1.18.3
+                 email-validator==2.3.0
+                 numpy==2.4.2
+                 websocket-client==1.9.0
+                 humanize==4.15.0
+                 sagemaker_studio==1.0.23
+                 mmh3==5.2.0
+                 py-spy==0.4.1
+                 google-cloud-automl==2.18.1
+                 gcloud-aio-storage==9.6.1
+                 pip==26.0
+                 google-genai==1.61.0
+                 anyio==4.12.1
+                 google-cloud-orchestration-airflow==1.19.0
+                 elasticsearch==8.19.3
+                 uv==0.9.29
+                 azure-core==1.38.0
+                 aiosqlite==0.21.0
+                 uritemplate==4.2.0
+                 apache-airflow-providers-amazon==9.21.0
+                 pathspec==1.0.4
+                 elastic-transport==8.17.1
+                 mysql-connector-python==9.5.0
+                 yarl==1.22.0
+                 fsspec==2026.1.0
+                 multidict==6.7.1
+                 google-cloud-dataplex==2.16.0
+                 apache-airflow-providers-fab==3.2.0
+                 opentelemetry-exporter-otlp-proto-http==1.27.0
+                 dill==0.4.1
+                 prison==0.2.1
+                 outcome==1.3.0.post0
+                 google-cloud-tasks==2.21.0
+                 pytz==2025.2
+                 uvicorn==0.40.0
+                 pydantic==2.12.5
+                 cron_descriptor==2.0.6
+                 google-cloud-dataproc-metastore==1.21.0
+                 PyNaCl==1.6.2
+                 virtualenv==20.36.1
+                 ordered-set==4.1.0
+                 fastapi==0.117.1
+                 msgraphfs==0.4
+                 azure-mgmt-core==1.6.0
+                 google-cloud-appengine-logging==1.8.0
+                 azure-mgmt-containerinstance==10.1.0
+                 python-dotenv==1.2.1
+                 google-cloud-memcache==1.14.0
+                 slack_sdk==3.39.0
+                 google-cloud-resource-manager==1.16.0
+                 apache-airflow-providers-snowflake==6.9.0
+                 google-analytics-admin==0.27.0
+                 pyarrow==18.1.0
+                 methodtools==0.4.7
+                 psutil==7.2.2
+                 wheel==0.46.3
+                 libcst==1.8.6
+                 amqp==5.3.1
+                 ply==3.11
+                 grpcio==1.65.5
+                 apache-airflow-providers-hashicorp==4.4.3
+                 google-api-core==2.29.0
+                 azure-mgmt-nspkg==3.0.2
+                 adbc-driver-sqlite==1.10.0
+                 typer-slim==0.21.1
+                 Flask-Session==0.8.0
+                 smart_open==7.5.0
+                 google-cloud-storage==3.9.0
+                 pycparser==3.0
+                 vine==5.1.0
+                 cachelib==0.13.0
+                 pyproject_hooks==1.2.0
+                 apache-airflow-providers-common-compat==1.13.0
+                 mdurl==0.1.2
+                 apache-airflow-providers-microsoft-azure==12.10.3
+                 uc-micro-py==1.0.3
+                 rich==13.9.4
+                 scramp==1.4.8
+                 asgiref==3.11.0
+                 PyJWT==2.11.0
+                 typing-inspection==0.4.2
+                 frozenlist==1.8.0
+                 sendgrid==6.11.0
+                 redis==6.4.0
+                 grpc-interceptor==0.15.4
+                 referencing==0.37.0
+                 marshmallow==3.26.2
+                 graphviz==0.21
+                 gcloud-aio-auth==5.4.2
+                 importlib_metadata==8.4.0
+                 google-cloud-dlp==3.34.0
+                 google-cloud-workflows==1.20.0
+                 opentelemetry-exporter-otlp==1.27.0
+                 six==1.17.0
+                 structlog==25.5.0
+                 pydantic_core==2.41.5
+                 azure-identity==1.25.1
+                 svcs==25.1.0
+                 apache-airflow-providers-grpc==3.9.2
+                 setproctitle==1.3.7
+                 greenlet==3.3.1
+                 PyYAML==6.0.3
+                 lazy-object-proxy==1.12.0
+                 PyMySQL==1.1.2
+                 limits==5.6.0
+                 google-auth-httplib2==0.3.0
+                 google-cloud-storage-transfer==1.19.0
+                 cachetools==7.0.0
+                 SQLAlchemy==2.0.46
+                 fastapi-cli==0.0.20
+                 platformdirs==4.5.1
+                 h2==4.3.0
+                 opencensus-context==0.1.3
+                 apache-airflow-providers-openlineage==2.10.1
+                 ray==2.47.1
+                 azure-mgmt-datafactory==9.2.0
+                 snowflake-sqlalchemy==1.8.2
+                 google-cloud-dataflow-client==0.11.0
+                 watchfiles==1.1.1
+                 jsonschema-specifications==2025.9.1
+                 asyncssh==2.22.0
+                 azure-mgmt-datalake-store==0.5.0
+                 google-auth==2.48.0
+                 grpcio-gcp==0.2.2
+                 pyodbc==5.3.0
+                 markdown-it-py==4.0.0
+                 lockfile==0.12.2
+                 msrestazure==0.6.4.post1
+                 tenacity==9.1.2
+                 annotated-types==0.7.0
+                 eventlet==0.40.4
+                 google-cloud-batch==0.20.0
+                 aiohttp-cors==0.8.1
+                 zope.interface==8.2
+                 click==8.3.1
+                 prometheus_client==0.24.1
+                 std-uritemplate==2.0.8
+                 python-daemon==3.1.2
+                 httplib2==0.22.0
+                 googleapis-common-protos==1.72.0
+                 psycopg2-binary==2.9.11
+                 openlineage-python==1.43.0
+                 google-api-python-client==2.188.0
+                 billiard==4.2.4
+                 microsoft-kiota-authentication-azure==1.9.8
+                 adal==1.2.7
+                 PyAthena==3.26.0
+                 types-protobuf==6.32.1.20251210
+                 kubernetes==35.0.0
+                 microsoft-kiota-http==1.9.8
+                 apache-airflow-providers-docker==4.5.2
+                 azure-mgmt-resource==24.0.0
+                 Werkzeug==2.2.3
+                 google-cloud-kms==3.10.0
+                 babel==2.18.0
+                 grpcio-status==1.62.3
+                 distro==1.9.0
+                 azure-keyvault-secrets==4.10.0
+                 smmap==5.0.2
+                 pluggy==1.6.0
+                 argcomplete==3.6.3
+                 tabulate==0.9.0
+                 clickclick==20.10.2
+                 adbc-driver-postgresql==1.10.0
+                 snowflake-connector-python==4.0.0
+                 greenback==1.3.0
+                 azure-storage-file-datalake==12.23.0
+                 pydata-google-auth==1.9.1
+                 termcolor==3.3.0
+                 soupsieve==2.8.3
+                 MarkupSafe==3.0.3
+                 zipp==3.23.0
+                 sqlalchemy-spanner==1.17.2
+                 Mako==1.3.10
+                 msgraph-core==1.3.8
+                 immutabledict==4.2.2
+                 google-cloud-audit-log==0.4.0
+                 regex==2026.1.15
+                 openlineage-integration-common==1.43.0
+                 tokenizers==0.22.2
+                 python-http-client==3.3.7
+                 google-cloud-aiplatform==1.135.0
+                 WTForms==3.2.1
+                 apache-airflow-providers-redis==4.4.2
+                 durationpy==0.10
+                 azure-servicebus==7.14.3
+                 asyncpg==0.31.0
+                 linkify-it-py==2.0.3
+                 apache-airflow==3.1.7
+                 packaging==26.0
+                 itsdangerous==2.2.0
+                 google-cloud-run==0.15.0
+                 azure-nspkg==3.0.2
+                 msrest==0.7.1
+                 microsoft-kiota-serialization-json==1.9.8
+                 azure-storage-file-share==12.24.0
+                 requests==2.32.5
+                 apache-airflow-providers-postgres==6.5.3
+                 apache-airflow-providers-odbc==4.11.1
+                 apache-airflow-providers-elasticsearch==6.4.4
+                 tornado==6.5.4
+                 paramiko==3.5.1
+                 wirerope==1.0.0
+                 openlineage_sql==1.43.0
+                 joblib==1.5.3
+                 rsa==4.9.1
+                 tzlocal==5.3.1
+                 gevent==25.9.1
+                 text-unidecode==1.3
+                 Jinja2==3.1.6
+                 docstring_parser==0.17.0
+                 google-cloud-bigquery==3.40.0
+                 apache-airflow-providers-ftp==3.14.1
+                 backoff==2.2.1
+                 certifi==2026.1.4
+                 azure-mgmt-containerregistry==14.0.0
+                 rich-toolkit==0.18.1
+                 ijson==3.4.0.post0
+                 google-cloud-alloydb==0.7.0
+                 apache-airflow-providers-http==5.6.4
+                 cloudpickle==3.1.1
+                 requests-oauthlib==2.0.0
+                 google-cloud-spanner==3.62.0
+                 google-cloud-translate==3.24.0
+                 google-cloud-bigquery-storage==2.36.0
+                 azure-datalake-store==0.0.53
+                 apache-airflow-providers-standard==1.11.0
+                 h11==0.16.0
+                 apache-airflow-providers-sendgrid==4.2.1
+                 pendulum==3.2.0
+                 fastuuid==0.14.0
+                 azure-mgmt-cosmosdb==9.9.0
+                 pyasn1==0.6.2
+                 msgspec==0.20.0
+                 msgpack==1.1.2
+                 dnspython==2.8.0
+                 lxml==6.0.2
+                 tomlkit==0.14.0
+                 connexion==2.14.2
+                 pygtrie==2.5.0
+                 apache-airflow-task-sdk==1.1.7
+                 google-cloud-os-login==2.19.0
+                 scipy==1.17.0
+                 litellm==1.81.6
+                 apache-airflow-providers-cncf-kubernetes==10.12.3
+                 oauthlib==3.3.1
+                 Flask==2.2.5
+                 click-didyoumean==0.3.1
+                 pandas-gbq==0.33.0
+                 more-itertools==10.8.0
+                 msal==1.34.0
+                 colorlog==6.10.1
+                 marshmallow-sqlalchemy==1.4.2
+                 kubernetes_asyncio==34.3.3
+                 idna==3.11
+                 SQLAlchemy-JSONField==1.0.2
+                 azure-kusto-data==6.0.1
+                 shellingham==1.5.4
+                 aioitertools==0.13.0
+                 Flask-Limiter==3.12
+                 apache-airflow-providers-common-io==1.7.1
+                 google-cloud-redis==2.20.0
+                 croniter==6.0.0
+                 pyparsing==3.3.2
+                 Deprecated==1.3.1
+                 universal_pathlib==0.2.6
+                 uvloop==0.22.1
+                 filelock==3.20.3
+                 httpcore==1.0.9
+                 db-dtypes==1.5.0
+                 aiosmtplib==5.1.0
+                 chardet==5.2.0
+                 microsoft-kiota-abstractions==1.9.8
+                 natsort==8.4.0
+                 azure-cosmos==4.14.5
+                 sqlparse==0.5.5
+                 rich-argparse==1.7.2
+                 google-cloud-storage-control==1.9.0
+                 rpds-py==0.30.0
+                 protobuf==4.25.8
+                 cattrs==25.3.0
+                 looker_sdk==26.0.0
+                 google-cloud-container==2.63.0
+                 google-cloud-language==2.19.0
+                 asn1crypto==1.5.1
+                 google-cloud-core==2.5.0
+                 azure-synapse-spark==0.7.0
+                 pandas==2.3.3
+                 python-ldap==3.4.5
+                 attrs==25.4.0
+                 python-multipart==0.0.22
+                 hyperframe==6.1.0
+                 decorator==5.2.1
+                 apache-airflow-providers-slack==9.6.2
+                 aiomysql==0.3.2
+                 redshift-connector==2.1.7
+                 google-cloud-speech==2.36.0
+                 wrapt==2.1.1
+                 apache-airflow-core==3.1.7
+                 azure-common==1.1.28
+                 threadpoolctl==3.6.0
+                 grpc-google-iam-v1==0.14.3
+                 google-cloud-dataproc==5.24.0
+                 openai==2.16.0
+                 charset-normalizer==3.4.4
+                 requests-toolbelt==1.0.0
+                 sortedcontainers==2.4.0
+                 click-plugins==1.1.1.2
+                 importlib_resources==6.5.2
+                 google-cloud-bigtable==2.35.0
+                 aiohappyeyeballs==2.6.1
+                 statsd==4.0.1
+                 pyasn1_modules==0.4.2
+                 opentelemetry-exporter-prometheus==0.48b0
+                 azure-mgmt-datalake-nspkg==3.0.1
+                 apache-airflow-providers-celery==3.15.2
+                 google-ads==29.0.0
+                 google-cloud-vision==3.12.0
+                 google-cloud-compute==1.43.0
+                 mysqlclient==2.2.7
+                 google-crc32c==1.8.0
+                 hvac==2.4.0
+                 microsoft-kiota-serialization-text==1.9.8
+                 google-cloud-bigquery-datatransfer==3.21.0
+                 adbc-driver-manager==1.10.0
+                 flower==2.0.1
+                 cffi==2.0.0
+                 apache-airflow-providers-sftp==5.7.0
+                 boto3==1.42.30
+                 distlib==0.4.0
+                 s3transfer==0.16.0
+                 uuid6==2025.0.1
+                 typer==0.21.1
+                 python-dateutil==2.9.0.post0
+                 zope.event==6.1
+                 hpack==4.1.0
+                 azure-mgmt-storage==24.0.0
+                 inflection==0.5.1
+                 cryptography==42.0.8
+                 Flask-SQLAlchemy==3.1.1
+                 ruamel.yaml==0.19.1
+                 prompt_toolkit==3.0.52
+                 opentelemetry-api==1.27.0
+                 Pygments==2.19.2
+                 tiktoken==0.12.0
+                 aiofiles==24.1.0
+                 google-cloud-monitoring==2.29.0
+                 google-cloud-dataform==0.8.0
+                 apache-airflow-providers-ssh==4.3.1
+                 opentelemetry-proto==1.27.0
+                 setuptools==80.10.2
+                 aiosignal==1.4.0
+                 wcwidth==0.5.3
+                 snowflake-snowpark-python==1.45.0
+                 httptools==0.7.1
+                 apispec==6.9.0
+                 jsonpath-ng==1.7.0
+                 urllib3==2.6.3
+                 propcache==0.4.1
+                 opentelemetry-resourcedetector-gcp==1.9.0a0
+                 jsonschema==4.26.0
+                 Flask-AppBuilder==5.0.1
+                 gcloud-aio-bigquery==7.1.0
+                 sshtunnel==0.4.0
+                 apache-airflow-providers-google==19.5.0
+                 typing_extensions==4.15.0
+                 google-cloud-logging==3.13.0
+                 botocore==1.42.30
+                 google-cloud-pubsub==2.34.0
+                 proto-plus==1.27.1
+                 Flask-Login==0.6.3
+                 msal-extensions==1.3.1
+                 opentelemetry-semantic-conventions==0.48b0
+                 apache-airflow-providers-common-messaging==2.0.2
+                 bcrypt==5.0.0
+                 google-resumable-media==2.8.0
+                 pyOpenSSL==25.1.0
+                 colorama==0.4.6
+                 a2wsgi==1.10.10
+                 GitPython==3.1.46
+                 sniffio==1.3.1
+                 google-auth-oauthlib==1.2.4
+                 sqlalchemy-bigquery==1.16.0
+                 azure-storage-blob==12.28.0
+                 isodate==0.7.2
+                 opentelemetry-exporter-otlp-proto-grpc==1.27.0
+                 flask-babel==4.0.0
+                 blinker==1.9.0
+                 cadwyn==5.4.6
+                 aiohttp==3.13.3
+                 debugpy==1.8.14
+
+I+00000.189: sys.argv before parsing: ['/home/airflow/.local/lib/python3.12/site-packages/debugpy/__main__.py', '--log-to-stderr', '--listen', '0.0.0.0:5683', '--wait-for-client', '/opt/airflow/dags/download_files.py']
+                      after parsing:  ['/home/airflow/.local/lib/python3.12/site-packages/debugpy/__main__.py']
+
+D+00000.189: sys.argv after patching: ['/opt/airflow/dags/download_files.py']
+
+D+00000.189: configure({'qt': 'none', 'subProcess': True}, {})
+
+D+00000.189: listen(('0.0.0.0', 5683), **{})
+
+I+00000.189: Initial debug configuration: {
+                 "qt": "none",
+                 "subProcess": true,
+                 "python": "/home/airflow/.local/bin/python",
+                 "pythonEnv": {}
+             }
+
+I+00000.190: Waiting for adapter endpoints on 127.0.0.1:43783...
+
+I+00000.190: debugpy.listen() spawning adapter: [
+                 "/home/airflow/.local/bin/python",
+                 "/home/airflow/.local/lib/python3.12/site-packages/debugpy/adapter",
+                 "--for-server",
+                 "43783",
+                 "--host",
+                 "0.0.0.0",
+                 "--port",
+                 "5683",
+                 "--server-access-token",
+                 "888d2b35d46ace413f13d0ee5204cbe1846057b068b4af40f95ec95d78d5ecd9"
+             ]
+
+I+00000.430: Endpoints received from adapter: {
+                 "client": {
+                     "host": "0.0.0.0",
+                     "port": 5683
+                 },
+                 "server": {
+                     "host": "127.0.0.1",
+                     "port": 33839
+                 }
+             }
+
+I+00000.430: Adapter is accepting incoming client connections on 0.0.0.0:5683
+
+D+00000.430: pydevd.settrace(*(), **{'host': '127.0.0.1', 'port': 33839, 'wait_for_ready_to_run': False, 'block_until_connected': True, 'access_token': '888d2b35d46ace413f13d0ee5204cbe1846057b068b4af40f95ec95d78d5ecd9', 'suspend': False, 'patch_multiprocessing': True, 'dont_trace_start_patterns': ('/home/airflow/.local/lib/python3.12/site-packages/debugpy',), 'dont_trace_end_patterns': ('debugpy_launcher.py',)})
+
+I+00000.534: pydevd is connected to adapter at 127.0.0.1:33839
+
+D+00000.534: wait_for_client()
+
+I+00030.047: Pre-launch environment:
+             
+             System paths:
+                 sys.executable: /home/airflow/.local/bin/python(/usr/python/bin/python3.12)
+                 sys.prefix: /home/airflow/.local
+                 sys.base_prefix: /usr/python
+                 sys.real_prefix: <missing>
+                 site.getsitepackages(): /home/airflow/.local/lib/python3.12/site-packages
+                 site.getusersitepackages(): /home/airflow/.local/lib/python3.12/site-packages
+                 sys.path (site-packages): /home/airflow/.local/lib/python3.12/site-packages
+                 sysconfig.get_path('stdlib'): /usr/python/lib/python3.12
+                 sysconfig.get_path('platstdlib'): /home/airflow/.local/lib/python3.12
+                 sysconfig.get_path('purelib'): /home/airflow/.local/lib/python3.12/site-packages
+                 sysconfig.get_path('platlib'): /home/airflow/.local/lib/python3.12/site-packages
+                 sysconfig.get_path('include'): /usr/python/include/python3.12
+                 sysconfig.get_path('scripts'): /home/airflow/.local/bin
+                 sysconfig.get_path('data'): /home/airflow/.local
+                 os.__file__: /usr/python/lib/python3.12/os.py
+                 threading.__file__: /usr/python/lib/python3.12/threading.py
+                 debugpy.__file__: /home/airflow/.local/lib/python3.12/site-packages/debugpy/__init__.py
+             
+             Installed packages:
+                 tzdata==2025.3
+                 build==1.4.0
+                 hf-xet==1.2.0
+                 SQLAlchemy-Utils==0.42.1
+                 google-cloud-texttospeech==2.34.0
+                 google-cloud-datacatalog==3.29.0
+                 opentelemetry-exporter-otlp-proto-common==1.27.0
+                 watchtower==3.4.0
+                 google-cloud-secret-manager==2.26.0
+                 tqdm==4.67.2
+                 click-repl==0.3.0
+                 apache-airflow-providers-common-sql==1.30.4
+                 celery==5.6.2
+                 azure-synapse-artifacts==0.21.0
+                 colorful==0.5.8
+                 starlette==0.48.0
+                 opencensus==0.11.4
+                 starkbank-ecdsa==2.2.0
+                 Authlib==1.6.6
+                 apache-airflow-providers-smtp==2.4.2
+                 opentelemetry-sdk==1.27.0
+                 jiter==0.13.0
+                 google-cloud-build==3.35.0
+                 gitdb==4.0.12
+                 gcsfs==2026.1.0
+                 google-cloud-videointelligence==2.18.0
+                 huggingface_hub==1.3.7
+                 azure-batch==14.2.0
+                 beautifulsoup4==4.14.3
+                 Flask-JWT-Extended==4.7.1
+                 aiobotocore==3.1.1
+                 httpx==0.28.1
+                 python-slugify==8.0.4
+                 websockets==15.0.1
+                 google-cloud-managedkafka==0.3.0
+                 kombu==5.6.2
+                 adlfs==2025.8.0
+                 jmespath==0.10.0
+                 docker==7.1.0
+                 Flask-WTF==1.2.2
+                 scikit-learn==1.8.0
+                 apache-airflow-providers-mysql==6.4.2
+                 apache-airflow-providers-git==0.2.2
+                 alembic==1.18.3
+                 email-validator==2.3.0
+                 numpy==2.4.2
+                 websocket-client==1.9.0
+                 humanize==4.15.0
+                 sagemaker_studio==1.0.23
+                 mmh3==5.2.0
+                 py-spy==0.4.1
+                 google-cloud-automl==2.18.1
+                 gcloud-aio-storage==9.6.1
+                 pip==26.0
+                 google-genai==1.61.0
+                 anyio==4.12.1
+                 google-cloud-orchestration-airflow==1.19.0
+                 elasticsearch==8.19.3
+                 uv==0.9.29
+                 azure-core==1.38.0
+                 aiosqlite==0.21.0
+                 uritemplate==4.2.0
+                 apache-airflow-providers-amazon==9.21.0
+                 pathspec==1.0.4
+                 elastic-transport==8.17.1
+                 mysql-connector-python==9.5.0
+                 yarl==1.22.0
+                 fsspec==2026.1.0
+                 multidict==6.7.1
+                 google-cloud-dataplex==2.16.0
+                 apache-airflow-providers-fab==3.2.0
+                 opentelemetry-exporter-otlp-proto-http==1.27.0
+                 dill==0.4.1
+                 prison==0.2.1
+                 outcome==1.3.0.post0
+                 google-cloud-tasks==2.21.0
+                 pytz==2025.2
+                 uvicorn==0.40.0
+                 pydantic==2.12.5
+                 cron_descriptor==2.0.6
+                 google-cloud-dataproc-metastore==1.21.0
+                 PyNaCl==1.6.2
+                 virtualenv==20.36.1
+                 ordered-set==4.1.0
+                 fastapi==0.117.1
+                 msgraphfs==0.4
+                 azure-mgmt-core==1.6.0
+                 google-cloud-appengine-logging==1.8.0
+                 azure-mgmt-containerinstance==10.1.0
+                 python-dotenv==1.2.1
+                 google-cloud-memcache==1.14.0
+                 slack_sdk==3.39.0
+                 google-cloud-resource-manager==1.16.0
+                 apache-airflow-providers-snowflake==6.9.0
+                 google-analytics-admin==0.27.0
+                 pyarrow==18.1.0
+                 methodtools==0.4.7
+                 psutil==7.2.2
+                 wheel==0.46.3
+                 libcst==1.8.6
+                 amqp==5.3.1
+                 ply==3.11
+                 grpcio==1.65.5
+                 apache-airflow-providers-hashicorp==4.4.3
+                 google-api-core==2.29.0
+                 azure-mgmt-nspkg==3.0.2
+                 adbc-driver-sqlite==1.10.0
+                 typer-slim==0.21.1
+                 Flask-Session==0.8.0
+                 smart_open==7.5.0
+                 google-cloud-storage==3.9.0
+                 pycparser==3.0
+                 vine==5.1.0
+                 cachelib==0.13.0
+                 pyproject_hooks==1.2.0
+                 apache-airflow-providers-common-compat==1.13.0
+                 mdurl==0.1.2
+                 apache-airflow-providers-microsoft-azure==12.10.3
+                 uc-micro-py==1.0.3
+                 rich==13.9.4
+                 scramp==1.4.8
+                 asgiref==3.11.0
+                 PyJWT==2.11.0
+                 typing-inspection==0.4.2
+                 frozenlist==1.8.0
+                 sendgrid==6.11.0
+                 redis==6.4.0
+                 grpc-interceptor==0.15.4
+                 referencing==0.37.0
+                 marshmallow==3.26.2
+                 graphviz==0.21
+                 gcloud-aio-auth==5.4.2
+                 importlib_metadata==8.4.0
+                 google-cloud-dlp==3.34.0
+                 google-cloud-workflows==1.20.0
+                 opentelemetry-exporter-otlp==1.27.0
+                 six==1.17.0
+                 structlog==25.5.0
+                 pydantic_core==2.41.5
+                 azure-identity==1.25.1
+                 svcs==25.1.0
+                 apache-airflow-providers-grpc==3.9.2
+                 setproctitle==1.3.7
+                 greenlet==3.3.1
+                 PyYAML==6.0.3
+                 lazy-object-proxy==1.12.0
+                 PyMySQL==1.1.2
+                 limits==5.6.0
+                 google-auth-httplib2==0.3.0
+                 google-cloud-storage-transfer==1.19.0
+                 cachetools==7.0.0
+                 SQLAlchemy==2.0.46
+                 fastapi-cli==0.0.20
+                 platformdirs==4.5.1
+                 h2==4.3.0
+                 opencensus-context==0.1.3
+                 apache-airflow-providers-openlineage==2.10.1
+                 ray==2.47.1
+                 azure-mgmt-datafactory==9.2.0
+                 snowflake-sqlalchemy==1.8.2
+                 google-cloud-dataflow-client==0.11.0
+                 watchfiles==1.1.1
+                 jsonschema-specifications==2025.9.1
+                 asyncssh==2.22.0
+                 azure-mgmt-datalake-store==0.5.0
+                 google-auth==2.48.0
+                 grpcio-gcp==0.2.2
+                 pyodbc==5.3.0
+                 markdown-it-py==4.0.0
+                 lockfile==0.12.2
+                 msrestazure==0.6.4.post1
+                 tenacity==9.1.2
+                 annotated-types==0.7.0
+                 eventlet==0.40.4
+                 google-cloud-batch==0.20.0
+                 aiohttp-cors==0.8.1
+                 zope.interface==8.2
+                 click==8.3.1
+                 prometheus_client==0.24.1
+                 std-uritemplate==2.0.8
+                 python-daemon==3.1.2
+                 httplib2==0.22.0
+                 googleapis-common-protos==1.72.0
+                 psycopg2-binary==2.9.11
+                 openlineage-python==1.43.0
+                 google-api-python-client==2.188.0
+                 billiard==4.2.4
+                 microsoft-kiota-authentication-azure==1.9.8
+                 adal==1.2.7
+                 PyAthena==3.26.0
+                 types-protobuf==6.32.1.20251210
+                 kubernetes==35.0.0
+                 microsoft-kiota-http==1.9.8
+                 apache-airflow-providers-docker==4.5.2
+                 azure-mgmt-resource==24.0.0
+                 Werkzeug==2.2.3
+                 google-cloud-kms==3.10.0
+                 babel==2.18.0
+                 grpcio-status==1.62.3
+                 distro==1.9.0
+                 azure-keyvault-secrets==4.10.0
+                 smmap==5.0.2
+                 pluggy==1.6.0
+                 argcomplete==3.6.3
+                 tabulate==0.9.0
+                 clickclick==20.10.2
+                 adbc-driver-postgresql==1.10.0
+                 snowflake-connector-python==4.0.0
+                 greenback==1.3.0
+                 azure-storage-file-datalake==12.23.0
+                 pydata-google-auth==1.9.1
+                 termcolor==3.3.0
+                 soupsieve==2.8.3
+                 MarkupSafe==3.0.3
+                 zipp==3.23.0
+                 sqlalchemy-spanner==1.17.2
+                 Mako==1.3.10
+                 msgraph-core==1.3.8
+                 immutabledict==4.2.2
+                 google-cloud-audit-log==0.4.0
+                 regex==2026.1.15
+                 openlineage-integration-common==1.43.0
+                 tokenizers==0.22.2
+                 python-http-client==3.3.7
+                 google-cloud-aiplatform==1.135.0
+                 WTForms==3.2.1
+                 apache-airflow-providers-redis==4.4.2
+                 durationpy==0.10
+                 azure-servicebus==7.14.3
+                 asyncpg==0.31.0
+                 linkify-it-py==2.0.3
+                 apache-airflow==3.1.7
+                 packaging==26.0
+                 itsdangerous==2.2.0
+                 google-cloud-run==0.15.0
+                 azure-nspkg==3.0.2
+                 msrest==0.7.1
+                 microsoft-kiota-serialization-json==1.9.8
+                 azure-storage-file-share==12.24.0
+                 requests==2.32.5
+                 apache-airflow-providers-postgres==6.5.3
+                 apache-airflow-providers-odbc==4.11.1
+                 apache-airflow-providers-elasticsearch==6.4.4
+                 tornado==6.5.4
+                 paramiko==3.5.1
+                 wirerope==1.0.0
+                 openlineage_sql==1.43.0
+                 joblib==1.5.3
+                 rsa==4.9.1
+                 tzlocal==5.3.1
+                 gevent==25.9.1
+                 text-unidecode==1.3
+                 Jinja2==3.1.6
+                 docstring_parser==0.17.0
+                 google-cloud-bigquery==3.40.0
+                 apache-airflow-providers-ftp==3.14.1
+                 backoff==2.2.1
+                 certifi==2026.1.4
+                 azure-mgmt-containerregistry==14.0.0
+                 rich-toolkit==0.18.1
+                 ijson==3.4.0.post0
+                 google-cloud-alloydb==0.7.0
+                 apache-airflow-providers-http==5.6.4
+                 cloudpickle==3.1.1
+                 requests-oauthlib==2.0.0
+                 google-cloud-spanner==3.62.0
+                 google-cloud-translate==3.24.0
+                 google-cloud-bigquery-storage==2.36.0
+                 azure-datalake-store==0.0.53
+                 apache-airflow-providers-standard==1.11.0
+                 h11==0.16.0
+                 apache-airflow-providers-sendgrid==4.2.1
+                 pendulum==3.2.0
+                 fastuuid==0.14.0
+                 azure-mgmt-cosmosdb==9.9.0
+                 pyasn1==0.6.2
+                 msgspec==0.20.0
+                 msgpack==1.1.2
+                 dnspython==2.8.0
+                 lxml==6.0.2
+                 tomlkit==0.14.0
+                 connexion==2.14.2
+                 pygtrie==2.5.0
+                 apache-airflow-task-sdk==1.1.7
+                 google-cloud-os-login==2.19.0
+                 scipy==1.17.0
+                 litellm==1.81.6
+                 apache-airflow-providers-cncf-kubernetes==10.12.3
+                 oauthlib==3.3.1
+                 Flask==2.2.5
+                 click-didyoumean==0.3.1
+                 pandas-gbq==0.33.0
+                 more-itertools==10.8.0
+                 msal==1.34.0
+                 colorlog==6.10.1
+                 marshmallow-sqlalchemy==1.4.2
+                 kubernetes_asyncio==34.3.3
+                 idna==3.11
+                 SQLAlchemy-JSONField==1.0.2
+                 azure-kusto-data==6.0.1
+                 shellingham==1.5.4
+                 aioitertools==0.13.0
+                 Flask-Limiter==3.12
+                 apache-airflow-providers-common-io==1.7.1
+                 google-cloud-redis==2.20.0
+                 croniter==6.0.0
+                 pyparsing==3.3.2
+                 Deprecated==1.3.1
+                 universal_pathlib==0.2.6
+                 uvloop==0.22.1
+                 filelock==3.20.3
+                 httpcore==1.0.9
+                 db-dtypes==1.5.0
+                 aiosmtplib==5.1.0
+                 chardet==5.2.0
+                 microsoft-kiota-abstractions==1.9.8
+                 natsort==8.4.0
+                 azure-cosmos==4.14.5
+                 sqlparse==0.5.5
+                 rich-argparse==1.7.2
+                 google-cloud-storage-control==1.9.0
+                 rpds-py==0.30.0
+                 protobuf==4.25.8
+                 cattrs==25.3.0
+                 looker_sdk==26.0.0
+                 google-cloud-container==2.63.0
+                 google-cloud-language==2.19.0
+                 asn1crypto==1.5.1
+                 google-cloud-core==2.5.0
+                 azure-synapse-spark==0.7.0
+                 pandas==2.3.3
+                 python-ldap==3.4.5
+                 attrs==25.4.0
+                 python-multipart==0.0.22
+                 hyperframe==6.1.0
+                 decorator==5.2.1
+                 apache-airflow-providers-slack==9.6.2
+                 aiomysql==0.3.2
+                 redshift-connector==2.1.7
+                 google-cloud-speech==2.36.0
+                 wrapt==2.1.1
+                 apache-airflow-core==3.1.7
+                 azure-common==1.1.28
+                 threadpoolctl==3.6.0
+                 grpc-google-iam-v1==0.14.3
+                 google-cloud-dataproc==5.24.0
+                 openai==2.16.0
+                 charset-normalizer==3.4.4
+                 requests-toolbelt==1.0.0
+                 sortedcontainers==2.4.0
+                 click-plugins==1.1.1.2
+                 importlib_resources==6.5.2
+                 google-cloud-bigtable==2.35.0
+                 aiohappyeyeballs==2.6.1
+                 statsd==4.0.1
+                 pyasn1_modules==0.4.2
+                 opentelemetry-exporter-prometheus==0.48b0
+                 azure-mgmt-datalake-nspkg==3.0.1
+                 apache-airflow-providers-celery==3.15.2
+                 google-ads==29.0.0
+                 google-cloud-vision==3.12.0
+                 google-cloud-compute==1.43.0
+                 mysqlclient==2.2.7
+                 google-crc32c==1.8.0
+                 hvac==2.4.0
+                 microsoft-kiota-serialization-text==1.9.8
+                 google-cloud-bigquery-datatransfer==3.21.0
+                 adbc-driver-manager==1.10.0
+                 flower==2.0.1
+                 cffi==2.0.0
+                 apache-airflow-providers-sftp==5.7.0
+                 boto3==1.42.30
+                 distlib==0.4.0
+                 s3transfer==0.16.0
+                 uuid6==2025.0.1
+                 typer==0.21.1
+                 python-dateutil==2.9.0.post0
+                 zope.event==6.1
+                 hpack==4.1.0
+                 azure-mgmt-storage==24.0.0
+                 inflection==0.5.1
+                 cryptography==42.0.8
+                 Flask-SQLAlchemy==3.1.1
+                 ruamel.yaml==0.19.1
+                 prompt_toolkit==3.0.52
+                 opentelemetry-api==1.27.0
+                 Pygments==2.19.2
+                 tiktoken==0.12.0
+                 aiofiles==24.1.0
+                 google-cloud-monitoring==2.29.0
+                 google-cloud-dataform==0.8.0
+                 apache-airflow-providers-ssh==4.3.1
+                 opentelemetry-proto==1.27.0
+                 setuptools==80.10.2
+                 aiosignal==1.4.0
+                 wcwidth==0.5.3
+                 snowflake-snowpark-python==1.45.0
+                 httptools==0.7.1
+                 apispec==6.9.0
+                 jsonpath-ng==1.7.0
+                 urllib3==2.6.3
+                 propcache==0.4.1
+                 opentelemetry-resourcedetector-gcp==1.9.0a0
+                 jsonschema==4.26.0
+                 Flask-AppBuilder==5.0.1
+                 gcloud-aio-bigquery==7.1.0
+                 sshtunnel==0.4.0
+                 apache-airflow-providers-google==19.5.0
+                 typing_extensions==4.15.0
+                 google-cloud-logging==3.13.0
+                 botocore==1.42.30
+                 google-cloud-pubsub==2.34.0
+                 proto-plus==1.27.1
+                 Flask-Login==0.6.3
+                 msal-extensions==1.3.1
+                 opentelemetry-semantic-conventions==0.48b0
+                 apache-airflow-providers-common-messaging==2.0.2
+                 bcrypt==5.0.0
+                 google-resumable-media==2.8.0
+                 pyOpenSSL==25.1.0
+                 colorama==0.4.6
+                 a2wsgi==1.10.10
+                 GitPython==3.1.46
+                 sniffio==1.3.1
+                 google-auth-oauthlib==1.2.4
+                 sqlalchemy-bigquery==1.16.0
+                 azure-storage-blob==12.28.0
+                 isodate==0.7.2
+                 opentelemetry-exporter-otlp-proto-grpc==1.27.0
+                 flask-babel==4.0.0
+                 blinker==1.9.0
+                 cadwyn==5.4.6
+                 aiohttp==3.13.3
+                 debugpy==1.8.14
+
+I+00030.047: Running file '/opt/airflow/dags/download_files.py'
+
+2026-02-18T20:50:45.968881Z [info     ] setup plugin alembic.autogenerate.schemas [alembic.runtime.plugins] loc=plugins.py:37
+2026-02-18T20:50:45.970265Z [info     ] setup plugin alembic.autogenerate.tables [alembic.runtime.plugins] loc=plugins.py:37
+2026-02-18T20:50:45.970402Z [info     ] setup plugin alembic.autogenerate.types [alembic.runtime.plugins] loc=plugins.py:37
+2026-02-18T20:50:45.970502Z [info     ] setup plugin alembic.autogenerate.constraints [alembic.runtime.plugins] loc=plugins.py:37
+2026-02-18T20:50:45.970822Z [info     ] setup plugin alembic.autogenerate.defaults [alembic.runtime.plugins] loc=plugins.py:37
+2026-02-18T20:50:45.971028Z [info     ] setup plugin alembic.autogenerate.comments [alembic.runtime.plugins] loc=plugins.py:37
+2026-02-18T20:50:47.195441Z [info     ] Created dag run.               [airflow.models.dagrun] dagrun=<DagRun download_files @ 2026-02-18 20:50:46.450389+00:00: manual__2026-02-18T20:50:47.163116+00:00, state:running, queued_at: None. run_type: manual> loc=dagrun.py:2188
+2026-02-18T20:50:47.217390Z [info     ] [DAG TEST] starting task_id=setup_workdir map_index=-1 [airflow.sdk.definitions.dag] loc=dag.py:1369
+2026-02-18T20:50:47.217752Z [info     ] [DAG TEST] running task <TaskInstance: download_files.setup_workdir manual__2026-02-18T20:50:47.163116+00:00 [TaskInstanceState.SCHEDULED]> [airflow.sdk.definitions.dag] loc=dag.py:1372
+/home/airflow/.local/lib/python3.12/site-packages/airflow/api_fastapi/execution_api/routes/__init__.py:23 DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+2026-02-18T20:50:49.130811Z [info     ] Task started                   [airflow.api_fastapi.execution_api.routes.task_instances] hostname=ceb0d729e0e0 loc=task_instances.py:199 previous_state=queued ti_id=019c7285-091a-7a9e-8bfa-5285903afad7
+2026-02-18T20:50:49.133865Z [info     ] Task instance state updated    [airflow.api_fastapi.execution_api.routes.task_instances] loc=task_instances.py:212 rows_affected=1 ti_id=019c7285-091a-7a9e-8bfa-5285903afad7
+2026-02-18T20:50:49.161307Z [info     ] Updating RenderedTaskInstanceFields [airflow.api_fastapi.execution_api.routes.task_instances] field_count=3 loc=task_instances.py:687 ti_id=019c7285-091a-7a9e-8bfa-5285903afad7
+
+
+
+
+
+
+

@@ -98,3 +98,23 @@ Run it manually from the UI or trigger it to see the modular approach in action.
 ## Stopping
 
 Press Ctrl+C to stop the standalone server.
+
+
+### Debugging with dag.test()
+
+1. (If port is busy) Kill port 5683:
+```bash
+docker compose -f docker-compose.yaml -f docker-compose.debug.yaml exec -T airflow-worker python /opt/airflow/dags/utils/kill_port.py 5683
+```
+
+2. Start debugpy in the worker (blocks until VS Code attaches):
+```bash
+docker compose -f docker-compose.yaml -f docker-compose.debug.yaml exec -T airflow-worker python -Xfrozen_modules=off -m debugpy --log-to-stderr --log-to /tmp/debugpy-logs --listen 0.0.0.0:5683 --wait-for-client /opt/airflow/dags/download_files.py
+
+
+
+
+docker compose -f docker-compose.yaml -f docker-compose.debug.yaml exec -T airflow-worker python -Xfrozen_modules=off -m debugpy --log-to-stderr --log-to /tmp/debugpy-logs --listen 0.0.0.0:5683 --wait-for-client /opt/airflow/dags/utils/debug_runner.py /opt/airflow/dags/download_files.py
+```
+
+3. Set breakpoints in the DAG file, then press **F5** with `Airflow: Debug Tasks (active file)`.
