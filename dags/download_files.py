@@ -7,7 +7,6 @@ from airflow.providers.standard.operators.python import PythonOperator
 # Import our custom utilities
 from utils.download_utils import (
     create_workdir,
-    download_multiple_files_concurrent,
     get_file_size_mb,
     cleanup_old_files,
 )
@@ -41,6 +40,25 @@ dag = DAG(
 
 
 def setup_workdir(**context):
+    """Create and register a working directory for downstream tasks.
+
+    This task creates a new working directory (using ``create_workdir``),
+    logs its location, and pushes the directory path to XCom under the
+    key ``"workdir"`` for use by other tasks in the DAG (for example,
+    ``download_files_task`` pulls it via the ``setup_workdir`` task ID).
+
+    Parameters
+    ----------
+    **context
+        Airflow task context, including the TaskInstance (``ti``) used
+        for XCom communication.
+
+    Returns
+    -------
+    str
+        The absolute path to the created working directory. This same
+        value is also stored in XCom with key ``"workdir"``.
+    """
     workdir = create_workdir("workdir")
     logger.info(f"Created working directory: {workdir}")
     # Store workdir in XCom for use by other tasks

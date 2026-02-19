@@ -21,6 +21,7 @@ _original_start = threading.Thread.start
 
 def _patched_start(self: threading.Thread, *args, **kwargs) -> None:
     _original_start(self, *args, **kwargs)
+    # pydevd/debugpy extension point: mark this thread so the debugger does not suspend it.
     self.is_pydev_daemon_thread = True  # type: ignore[attr-defined]
 
 

@@ -1,16 +1,19 @@
 """Kill whatever process is holding a given TCP port, using only /proc."""
 
-import os, signal, sys
+import os
+import signal
+import sys
 
 
 def kill_port(port):
     port_hex = format(port, "04X")
     inode = None
-    for f in ("/proc/net/tcp", "/proc/net/tcp6"):
-        try:
-            for line in open(f).readlines()[1:]:
-                p = line.split()
-                if p[1].split(":")[1].upper() == port_hex:
+            with open(f) as proc_file:
+                for line in proc_file.readlines()[1:]:
+                    p = line.split()
+                    if p[1].split(":")[1].upper() == port_hex:
+                        inode = p[9]
+                        break
                     inode = p[9]
                     break
         except OSError:
