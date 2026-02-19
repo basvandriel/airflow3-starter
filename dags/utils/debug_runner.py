@@ -27,6 +27,48 @@ def _patched_start(self: threading.Thread, *args, **kwargs) -> None:
 
 threading.Thread.start = _patched_start  # type: ignore[method-assign]
 
+# Airflow's VariableAccessor and context objects may make live API/DB calls for ANY attribute
+# access, including dunders like __iter__ that pydevd inspects at breakpoints.
+# Raise AttributeError for dunder keys to prevent spurious errors and slowdowns.
+
+# Patch VariableAccessor (context['var'])
+try:
+    from airflow.sdk.execution_time.context import VariableAccessor as _VariableAccessor
+    _orig_variable_getattr = _VariableAccessor.__getattr__
+    def _patched_variable_getattr(self: _VariableAccessor, key: str):  # type: ignore[override]
+        if key.startswith("__") and key.endswith("__"):
+            raise AttributeError(key)
+        return _orig_variable_getattr(self, key)
+    _VariableAccessor.__getattr__ = _patched_variable_getattr  # type: ignore[method-assign]
+except ImportError:
+    pass
+
+# Patch TaskInstance (context['ti']) if it has problematic __getattr__
+try:
+    from airflow.models.taskinstance import TaskInstance as _TaskInstance
+    if hasattr(_TaskInstance, '__getattr__'):
+        _orig_ti_getattr = _TaskInstance.__getattr__
+        def _patched_ti_getattr(self: _TaskInstance, key: str):  # type: ignore[override]
+            if key.startswith("__") and key.endswith("__"):
+                raise AttributeError(key)
+            return _orig_ti_getattr(self, key)
+        _TaskInstance.__getattr__ = _patched_ti_getattr  # type: ignore[method-assign]
+except (ImportError, AttributeError):
+    pass
+
+# Patch DagRun (context['dag_run']) if it has problematic __getattr__  
+try:
+    from airflow.models.dagrun import DagRun as _DagRun
+    if hasattr(_DagRun, '__getattr__'):
+        _orig_dagrun_getattr = _DagRun.__getattr__
+        def _patched_dagrun_getattr(self: _DagRun, key: str):  # type: ignore[override]
+            if key.startswith("__") and key.endswith("__"):
+                raise AttributeError(key)
+            return _orig_dagrun_getattr(self, key)
+        _DagRun.__getattr__ = _patched_dagrun_getattr  # type: ignore[method-assign]
+except (ImportError, AttributeError):
+    pass
+
 dag_path = sys.argv[1]
 sys.path.insert(0, os.path.dirname(os.path.abspath(dag_path)))
 runpy.run_path(dag_path, run_name="__main__")
