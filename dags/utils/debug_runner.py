@@ -10,6 +10,7 @@ session to hang. Marking them with is_pydev_daemon_thread=True tells pydevd
 to skip them. We patch Thread.start so it applies to every thread dag.test()
 spawns, without touching DAG files or Airflow internals.
 """
+
 import os
 import sys
 import threading
