@@ -104,7 +104,7 @@ Press Ctrl+C to stop the standalone server.
 
 1. (If port is busy) Kill port 5683:
 ```bash
-docker compose exec -T airflow-worker python /opt/airflow/dags/utils/kill_port.py 5683
+docker compose exec -T airflow-worker pkill -f debugpy || true
 ```
 
 2. Start debugpy in the worker (blocks until VS Code attaches):
