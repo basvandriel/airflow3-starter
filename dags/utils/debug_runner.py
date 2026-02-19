@@ -3,49 +3,28 @@ Debugpy entry point for Airflow DAGs.
 
 Usage: python -m debugpy --listen ... debug_runner.py <dag_file.py>
 
-Root cause: in attach/listen mode VS Code's DAP initialize handshake sets
-multi_threads_single_notification=True on the pydevd instance. This causes
-every breakpoint's suspend_policy to be "ALL", which freezes ALL threads —
-including Airflow's supervisor IPC thread (_handle_socket_comms). With that
-thread frozen, the task runner heartbeat breaks and the session hangs.
-
-In launch mode (local "Python Debugger: Current File") VS Code doesn't set
-this flag, so suspend_policy stays "NONE" and only the hitting thread pauses.
-
-Fix: set multi_threads_single_notification=False after pydevd initializes.
+In attach/listen mode VS Code sets suspend_policy="ALL" on every breakpoint,
+which freezes all threads including Airflow's supervisor IPC thread
+(_handle_socket_comms). With that frozen the session hangs. Marking threads
+with is_pydev_daemon_thread=True tells pydevd to exclude them from suspension.
+We patch Thread.start so it applies automatically to every thread dag.test()
+spawns, without touching DAG files or Airflow internals.
 """
 
 import os
 import sys
+import threading
 import runpy
 
-try:
-    import pydevd
+_original_start = threading.Thread.start
 
-    _pydb = pydevd.GetGlobalDebugger()
-    if _pydb is not None:
-        # Already initialized (unusual but handle it)
-        _pydb.whymulti_threads_single_notification = False
-    else:
-        # Debugger not yet active — install a one-shot trace hook that fires
-        # on the first line event after configurationDone, then removes itself.
-        import threading
 
-        def _fix_suspend_policy(frame, event, arg):
-            try:
-                _db = pydevd.GetGlobalDebugger()
-                if _db is not None:
-                    _db.multi_threads_single_notification = False
-            except Exception:
-                pass
-            sys.settrace(None)
-            threading.settrace(None)  # type: ignore[arg-type]
-            return None
+def _patched_start(self: threading.Thread, *args, **kwargs) -> None:
+    _original_start(self, *args, **kwargs)
+    self.is_pydev_daemon_thread = True  # type: ignore[attr-defined]
 
-        sys.settrace(_fix_suspend_policy)
-        threading.settrace(_fix_suspend_policy)  # type: ignore[arg-type]
-except ImportError:
-    pass
+
+threading.Thread.start = _patched_start  # type: ignore[method-assign]
 
 dag_path = sys.argv[1]
 sys.path.insert(0, os.path.dirname(os.path.abspath(dag_path)))
