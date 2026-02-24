@@ -44,9 +44,19 @@ jobs:
           helm repo add apache-airflow https://airflow.apache.org
           helm repo update
 
+      # ── Background pod watcher – prints events every 30 s while helm waits ──
+      - name: Watch pods (background)
+        run: |
+          while true; do
+            echo "── $(date -u +%H:%M:%S) pod status ──────────────────────────────"
+            kubectl get pods -n $NAMESPACE -o wide 2>/dev/null || true
+            kubectl get events -n $NAMESPACE --sort-by=.lastTimestamp 2>/dev/null | tail -20 || true
+            sleep 30
+          done &
+
       # ── Deploy Airflow ───────────────────────────────────────────────────────
       # Uses values.prod.yaml (DAGs baked in, no dags-PVC) overridden by
-      # values.ci.yaml (pullPolicy: Never, logs persistence off, slim resources).
+      # values.ci.yaml (LocalExecutor, pullPolicy: Never, logs persistence off).
       - name: Deploy Airflow via Helm
         run: |
           helm upgrade --install $CHART_NAME apache-airflow/airflow \
@@ -55,7 +65,7 @@ jobs:
             --values helm/values.ci.yaml \
             --set defaultAirflowRepository=$IMAGE_REPO \
             --set defaultAirflowTag=$IMAGE_TAG \
-            --timeout 20m \
+            --timeout 10m \
             --wait
 
       # ── Show pod state for debugging if something went wrong ────────────────

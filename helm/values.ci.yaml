@@ -1,14 +1,15 @@
 # CI-specific Helm overrides – applied on top of helm/values.prod.yaml.
 #
 # Differences from prod:
-#   - pullPolicy: Never  → use the image pre-loaded into the kind node; no
-#     registry pull required.
-#   - logs.persistence disabled → kind's built-in local-path provisioner only
-#     supports ReadWriteOnce; since multiple Airflow components would all need
-#     to mount the same volume (ReadWriteMany) we simply turn persistence off
-#     for CI.  The test_logs_pvc_is_bound test is excluded via pytest -k.
-#   - Slimmer resource requests so all pods fit on a single kind node running
-#     inside a GitHub Actions runner (7 GB RAM total).
+#   - executor: LocalExecutor  → tasks run inside the scheduler process;
+#     no worker pods, no extra RBAC, much simpler on kind.
+#   - pullPolicy: Never  → use the image pre-loaded into the kind node.
+#   - logs.persistence disabled + existingClaim cleared → kind's local-path
+#     provisioner only supports ReadWriteOnce, and the logs PVC from prod
+#     (my-logs-pvc) doesn't exist here.
+#   - Slimmer resource requests so all pods fit on a single kind node (7 GB).
+
+executor: LocalExecutor
 
 images:
   airflow:
@@ -17,6 +18,7 @@ images:
 logs:
   persistence:
     enabled: false
+    existingClaim: ""
 
 # One replica per component is enough for CI smoke-tests.
 scheduler:
