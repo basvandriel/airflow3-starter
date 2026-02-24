@@ -19,24 +19,14 @@ executor: LocalExecutor
 # DB manager, so `airflow db check-migrations` passes after one migrate.
 # Also disable the createUserJob — it creates FAB users which don't exist
 # with SimpleAuthManager.
-env:
-  - name: AIRFLOW__CORE__AUTH_MANAGER
-    value: airflow.api_fastapi.auth.managers.simple.simple_auth_manager.SimpleAuthManager
-  - name: AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS
-    value: "True"
+# env:
+#   - name: AIRFLOW__CORE__AUTH_MANAGER
+#     value: airflow.api_fastapi.auth.managers.simple.simple_auth_manager.SimpleAuthManager
+#   - name: AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS
+#     value: "True"
 
 createUserJob:
   enabled: false
-
-# Give the migration job more CPU so Alembic finishes faster.
-migrateDatabaseJob:
-  resources:
-    requests:
-      cpu: 500m
-      memory: 512Mi
-    limits:
-      cpu: "1"
-      memory: 512Mi
 
 # Extend the init-container wait timeout for migrations.
 # Default is 60s which is too short on a constrained kind node.
