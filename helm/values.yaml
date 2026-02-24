@@ -1,0 +1,31 @@
+# Custom values for the official Apache Airflow Helm chart
+# See https://airflow.apache.org/docs/helm-chart/stable/index.html for full
+# documentation of all options.
+
+# Use the same Airflow version we built in Dockerfile.
+image:
+  repository: apache/airflow
+  tag: "3.1.7"
+  pullPolicy: IfNotPresent
+
+# DAG configuration: disable built-in persistence/gitSync so that we can
+# mount an external volume (PVC) containing the dags directory.
+dags:
+  mountPath: "/opt/airflow/dags"
+  persistence:
+    enabled: false
+  gitSync:
+    enabled: false
+
+volumes:
+  - name: dags
+    persistentVolumeClaim:
+      claimName: my-dags-pvc
+
+volumeMounts:
+  - name: dags
+    mountPath: /opt/airflow/dags
+
+env:
+  - name: AIRFLOW__CORE__DAGS_FOLDER
+    value: "/opt/airflow/dags"
