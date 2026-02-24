@@ -1,16 +1,10 @@
 # Makefile for common project tasks
 
-.PHONY: build-image push-image helm-deploy helm-uninstall
+.PHONY: build-image push-image helm-deploy helm-uninstall sync-dags create-pvcs
 
 IMAGE?=airflow3-starter:latest
 CHART_NAME?=dev-airflow
 NAMESPACE?=airflow-dev
-
-build-image:
-	./scripts/build_image.sh $(IMAGE)
-
-push-image:
-	docker push $(IMAGE)
 
 helm-deploy:
 	helm repo add apache-airflow https://airflow.apache.org || true
