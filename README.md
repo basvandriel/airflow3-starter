@@ -122,15 +122,19 @@ Volume Claim** called `my-dags-pvc` into each pod.  This is the method we
 recommend for development because it preserves the full directory structure,
 so helper modules like `dags/utils` are available without any special tweaks.
 
-To use the PVC approach:
+To use the PVC approach (or just to prepare the namespace) you can run
+helper make targets that bundle the kubectl commands:
 
 ```bash
-# create the claim (adjust storage class/size to suit your cluster)
-kubectl apply -f helm/dags-pvc.yaml -n airflow-dev
+# create both the DAGs and logs PVCs
+make create-pvcs
 
-# copy your local DAG tree into the volume
+# populate the dags volume with your DAGs
 kubectl -n airflow-dev cp -r dags/. pvc/my-dags-pvc:/workdir
 ```
+
+Alternatively the `helm-deploy` target depends on `create-pvcs` so you
+can simply run `make helm-deploy` and it will create the PVCs for you.
 
 We also recommend mounting a separate PVC for logs (`my-logs-pvc`).
 Without shared storage the webserver will attempt to contact the worker pod
@@ -183,6 +187,36 @@ allowPodLaunching: true
 rbac:
   create: true
 ```
+
+You can customise the *pod template* that KubernetesExecutor uses for
+task pods, but you **don't have to**.  By default the chart writes its own
+`pod-template-file.kubernetes-helm-yaml` (see
+[upstream source](https://github.com/apache/airflow/blob/main/chart/files/pod-template-file.kubernetes-helm-yaml))
+and uses that when `kubernetes_executor.podTemplate` is left unset.
+
+This repository keeps `helm/pod_template.yaml` as a convenient copy of
+the upstream default so that you can start editing in-place.  If you want
+a fresh copy later you can run:
+
+```bash
+make generate-pod-template
+```
+
+which downloads the current default template from the Apache Airflow
+GitHub repository and writes it to `helm/pod_template.yaml` (overwriting
+any existing file).
+
+The Makefile's `helm-deploy` target now includes this file automatically
+`--values helm/pod_template.yaml`, so whatever is in it is merged into the
+release.  You don't need to touch `values.yaml` unless you prefer to keep
+the override inline; edits to `helm/pod_template.yaml` are sufficient.
+
+Until you start editing you could even leave the file blank; the chart will
+simply fall back to its built-in default template from
+`files/pod-template-file.kubernetes-helm-yaml`.
+Leaving `spec` empty will inherit all of the normal defaults, but you may
+add resource limits, node selectors, or init containers here if you need
+special behaviour during development.
 
 Then upgrade the release and your pods will restart with the new executor.
 

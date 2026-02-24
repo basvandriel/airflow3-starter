@@ -55,3 +55,4 @@ env:
     value: "False"
   - name: AIRFLOW__KUBERNETES_EXECUTOR__DELETE_WORKER_PODS_ON_FAILURE
     value: "False"
+

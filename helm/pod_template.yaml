@@ -1,0 +1,94 @@
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: placeholder-name
+  labels:
+    tier: airflow
+    component: worker
+    release: dev-airflow
+  annotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+spec:
+  containers:
+    - name: base
+      image: apache/airflow:3.1.7
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "512Mi"
+        limits:
+          cpu: "1"
+          memory: "1Gi"
+      env:
+        - name: AIRFLOW_HOME
+          value: /opt/airflow
+        - name: AIRFLOW__CORE__FERNET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dev-airflow-fernet-key
+              key: fernet-key
+        - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+          valueFrom:
+            secretKeyRef:
+              name: dev-airflow-metadata
+              key: connection
+        - name: AIRFLOW_CONN_AIRFLOW_DB
+          valueFrom:
+            secretKeyRef:
+              name: dev-airflow-metadata
+              key: connection
+        - name: AIRFLOW__API__SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dev-airflow-api-secret-key
+              key: api-secret-key
+        - name: AIRFLOW__API_AUTH__JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dev-airflow-jwt-secret
+              key: jwt-secret
+        - name: AIRFLOW__CORE__DAGS_FOLDER
+          value: "/opt/airflow/dags"
+        - name: AIRFLOW__CORE__BASE_LOG_FOLDER
+          value: "/opt/airflow/logs"
+        - name: AIRFLOW__KUBERNETES_EXECUTOR__DELETE_WORKER_PODS
+          value: "False"
+        - name: AIRFLOW__KUBERNETES_EXECUTOR__DELETE_WORKER_PODS_ON_FAILURE
+          value: "False"
+      volumeMounts:
+        - name: logs
+          mountPath: "/opt/airflow/logs"
+        - name: config
+          mountPath: "/opt/airflow/airflow.cfg"
+          subPath: airflow.cfg
+          readOnly: true
+        - name: config
+          mountPath: "/opt/airflow/config/airflow_local_settings.py"
+          subPath: airflow_local_settings.py
+          readOnly: true
+        - name: dags
+          mountPath: /opt/airflow/dags
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 600
+  serviceAccountName: "dev-airflow-worker"
+  securityContext:
+    runAsUser: 50000
+    fsGroup: 0
+  volumes:
+    - name: logs
+      persistentVolumeClaim:
+        claimName: my-logs-pvc
+    - name: config
+      configMap:
+        name: dev-airflow-config
+    - name: dags
+      persistentVolumeClaim:
+        claimName: my-dags-pvc
