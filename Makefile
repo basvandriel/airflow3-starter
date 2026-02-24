@@ -19,17 +19,8 @@ helm-deploy:
 	  --namespace $(NAMESPACE) --create-namespace \
 	  --values helm/values.yaml
 
-gen-configmap:
-	# generate a ConfigMap manifest from the local dags directory
-	kubectl create configmap airflow-dags --namespace=$(NAMESPACE) \
-	  --from-file=dags/ --dry-run=client -o yaml > helm/airflow-dags.yaml
-
 helm-uninstall:
 	helm uninstall $(CHART_NAME) -n $(NAMESPACE)
-
-get-default-values:
-	# fetch the chart's default values for reference
-	helm show values apache-airflow/airflow > helm/default-values.yaml
 
 # copy local dags into the PVC and restart the dag processor pod
 # this reuses the helper shell script for the actual work

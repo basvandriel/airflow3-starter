@@ -130,11 +130,6 @@ Add the Apache Airflow repo and deploy using your kubeconfig:
 helm repo add apache-airflow https://airflow.apache.org
 helm repo update
 
-# create the ConfigMap containing our DAGs (the manifest is included in
-# `helm/airflow-dags.yaml`, you can also regenerate it with the command
-# shown below whenever you modify the DAGs):
-# kubectl apply -f helm/airflow-dags.yaml
-
 helm upgrade --install dev-airflow apache-airflow/airflow \
   --namespace airflow-dev --create-namespace \
   --values helm/values.yaml
@@ -218,7 +213,7 @@ secrets, and resources.
 
 
 
-### Debugging with dag.test()
+### Debugging with `dag.test()` with local development
 
 1. (If port is busy) Kill port 5683:
 ```bash
