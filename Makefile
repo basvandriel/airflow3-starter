@@ -26,3 +26,8 @@ helm-uninstall:
 # this reuses the helper shell script for the actual work
 sync-dags:
 	./scripts/sync_dags.sh $(NAMESPACE)
+
+# create persistent volume claims for dags and logs in the target namespace
+create-pvcs:
+	kubectl apply -f helm/dags-pvc.yaml -n $(NAMESPACE)
+	kubectl apply -f helm/logs-pvc.yaml -n $(NAMESPACE)
