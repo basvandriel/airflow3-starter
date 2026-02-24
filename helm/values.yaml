@@ -2,11 +2,13 @@
 # See https://airflow.apache.org/docs/helm-chart/stable/index.html for full
 # documentation of all options.
 
-# Use the same Airflow version we built in Dockerfile.
-image:
-  repository: apache/airflow
-  tag: "3.1.7"
-  pullPolicy: IfNotPresent
+# The chart uses defaultAirflowRepository/defaultAirflowTag (not image.repository/tag).
+# Dev uses the official image directly — no custom build needed.
+defaultAirflowRepository: apache/airflow
+defaultAirflowTag: "3.1.7"
+images:
+  airflow:
+    pullPolicy: IfNotPresent
 
 # run with the KubernetesExecutor so each task executes in its own pod
 executor: "KubernetesExecutor"
@@ -33,7 +35,7 @@ dags:
 # fail when the host cannot be resolved (see issue described in the UI).
 # mounting a PVC means every component reads the same log tree directly.
 logs:
-  persistence:
+  persistence: 
     enabled: true
     existingClaim: my-logs-pvc
 

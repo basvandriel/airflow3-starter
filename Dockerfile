@@ -6,3 +6,7 @@ FROM apache/airflow:3.1.7
 ARG AIRFLOW_VERSION=3.1.7
 ADD requirements.txt .
 RUN pip install apache-airflow==${AIRFLOW_VERSION} -r requirements.txt
+
+# Copy DAGs into the image for production deployments.
+# For local/dev, DAGs are mounted from a PVC instead (see helm/values.yaml).
+COPY --chown=airflow:root dags/ /opt/airflow/dags/

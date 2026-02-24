@@ -11,4 +11,11 @@ dependencies = [
 [dependency-groups]
 dev = [
     "debugpy>=1.8.20",
+    "kubernetes>=35.0.0",
+    "pytest>=8.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Do not auto-discover conftest options for non-test invocations
+addopts = "-v"
