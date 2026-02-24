@@ -17,46 +17,15 @@ dags:
   gitSync:
     enabled: false
 
-# use a PVC to provide the dags tree; create the claim before installing the
-# chart (example manifest is shown in comments below).
 volumes:
   - name: dags
     persistentVolumeClaim:
-      claimName: my-dags-pvc        # adjust to your actual PVC name
+      claimName: my-dags-pvc
 
 volumeMounts:
   - name: dags
     mountPath: /opt/airflow/dags
 
-# Instead of managing a ConfigMap you can also tell the chart to pull your
-# repository (or a DAG-specific repo) via git-sync or mount a PVC.  That way the
-# entire `dags/` subtree including subpackages like `utils/` will appear on the
-# filesystem and imports work naturally.
-#
-# Example using git-sync:
-# dags:
-#   gitSync:
-#     enabled: true
-#     repo: https://github.com/basvandriel/airflow3-starter.git
-#     branch: main
-#     rev: HEAD
-#     subPath: "dags"               # or "" to use repo root
-#     # you can also configure knownHosts, sshKeySecret, etc.
-#
-# Example using a PV:
-# volumes:
-#   - name: dags-pvc
-#     persistentVolumeClaim:
-#       claimName: my-dags-claim
-# volumeMounts:
-#   - name: dags-pvc
-#     mountPath: /opt/airflow/dags
-#
-# (leave these commented out when using the configmap method described earlier)
-
-# Extra environment variables
 env:
   - name: AIRFLOW__CORE__DAGS_FOLDER
     value: "/opt/airflow/dags"
-
-# Feel free to add extraPipPackages, resources, etc. as needed.
