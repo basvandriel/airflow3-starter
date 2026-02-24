@@ -1,0 +1,2 @@
+# ignore temporary symlink directories created by configmap updates
+..*

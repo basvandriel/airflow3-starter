@@ -1,0 +1,36 @@
+# Custom values for the official Apache Airflow Helm chart
+# See https://airflow.apache.org/docs/helm-chart/stable/index.html for full
+# documentation of all options.
+
+# Use the same Airflow version we built in Dockerfile.
+image:
+  repository: apache/airflow
+  tag: "3.1.7"
+  pullPolicy: IfNotPresent
+
+# DAG configuration: disable built-in persistence/gitSync so we can mount
+# our custom ConfigMap manually.
+dags:
+  mountPath: "/opt/airflow/dags"
+  persistence:
+    enabled: false
+  gitSync:
+    enabled: false
+
+# Global volumes/volumeMounts are injected into all Airflow containers. They
+# must match the ConfigMap that we create via `make gen-configmap`.
+volumes:
+  - name: dags
+    configMap:
+      name: airflow-dags
+
+volumeMounts:
+  - name: dags
+    mountPath: /opt/airflow/dags
+
+# Extra environment variables
+env:
+  - name: AIRFLOW__CORE__DAGS_FOLDER
+    value: "/opt/airflow/dags"
+
+# Feel free to add extraPipPackages, resources, etc. as needed.

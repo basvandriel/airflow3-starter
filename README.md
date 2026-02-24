@@ -99,6 +99,76 @@ Run it manually from the UI or trigger it to see the modular approach in action.
 
 Press Ctrl+C to stop the standalone server.
 
+## Deploying to Kubernetes with Helm
+
+A remote k8s cluster is ideal for testing heavy DAGs that need terabytes of data. This project includes a `helm/values.yaml` with
+custom overrides for the [official Apache Airflow Helm chart](https://airflow.apache.org/docs/helm-chart/stable/index.html).
+
+### 1. Build & push a custom image (optional)
+
+If you need the DAGs, utilities, or extra Python packages baked into the container, build and push your image:
+
+```bash
+# tag example: myregistry.example.com/airflow3-starter:latest
+./scripts/build_image.sh myregistry.example.com/airflow3-starter:latest
+docker push myregistry.example.com/airflow3-starter:latest
+```
+
+Then update `helm/values.yaml`:
+
+```yaml
+image:
+  repository: myregistry.example.com/airflow3-starter
+  tag: "latest"
+```
+
+### 2. Install the chart
+
+Add the Apache Airflow repo and deploy using your kubeconfig:
+
+```bash
+helm repo add apache-airflow https://airflow.apache.org
+helm repo update
+
+# create the ConfigMap containing our DAGs (the manifest is included in
+# `helm/airflow-dags.yaml`, you can also regenerate it with the command
+# shown below whenever you modify the DAGs):
+# kubectl apply -f helm/airflow-dags.yaml
+
+helm upgrade --install dev-airflow apache-airflow/airflow \
+  --namespace airflow-dev --create-namespace \
+  --values helm/values.yaml
+```
+
+The supplied `values.yaml` mounts a ConfigMap named `airflow-dags` into the
+pods; `helm/airflow-dags.yaml` defines that ConfigMap with the two sample
+DAGs (`download_files.py` and `hello_world.py`).  When you update your local
+`dags/` directory rerun the `kubectl apply` step before upgrading.
+
+> **Alternative DAG delivery:**
+> * mount a PVC, or
+> * enable git‑sync (see chart docs)
+
+### 3. Access the UI
+
+Forward the webserver port or create a service:
+
+```bash
+kubectl -n airflow-dev port-forward svc/dev-airflow-webserver 8080:8080
+```
+
+Open <http://localhost:8080> and login with the credentials shown in the chart's output (typically `admin/admin`).
+
+### 4. Iteration
+
+- Modify DAGs locally and bump the ConfigMap by editing `helm/values.yaml` or using `--set-file`.
+- Run `helm upgrade` again to redeploy.
+- Scale worker replicas via `--set worker.replicas=<n>` to handle large loads.
+- Tear down when finished: `helm uninstall dev-airflow -n airflow-dev`.
+
+This setup gives you a development environment running in your remote cluster so you can execute realistic, large-scale workflows while still developing on your laptop.  Adjust `values.yaml` as needed for connections, secrets, and resources.
+
+
 
 ### Debugging with dag.test()
 
