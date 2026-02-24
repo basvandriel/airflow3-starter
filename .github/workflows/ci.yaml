@@ -75,7 +75,7 @@ jobs:
             --values helm/values.ci.yaml \
             --set defaultAirflowRepository=$IMAGE_REPO \
             --set defaultAirflowTag=$IMAGE_TAG \
-            --timeout 2m \
+            --timeout 7m \
             --wait \
             --debug
 

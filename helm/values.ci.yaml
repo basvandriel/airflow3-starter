@@ -15,6 +15,18 @@ images:
   airflow:
     pullPolicy: Never
 
+# Give the migration job more CPU so Alembic finishes faster.
+# It runs sequentially before any other pod can start, so this directly
+# reduces the overall helm --wait time.
+migrationJob:
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
 logs:
   persistence:
     enabled: false
