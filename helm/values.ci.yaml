@@ -11,25 +11,25 @@
 
 executor: LocalExecutor
 
+# Use SimpleAuthManager instead of the default FAB auth manager.
+# The project's airflow.cfg already uses SimpleAuthManager; aligning the
+# helm deployment avoids pulling in FABDBManager, whose separate alembic
+# table (alembic_version_fab) is not stamped on a brand-new database by a
+# single `airflow db migrate` run.  With SimpleAuthManager there is no FAB
+# DB manager, so `airflow db check-migrations` passes after one migrate.
+# Also disable the createUserJob — it creates FAB users which don't exist
+# with SimpleAuthManager.
+env:
+  - name: AIRFLOW__CORE__AUTH_MANAGER
+    value: airflow.api_fastapi.auth.managers.simple.simple_auth_manager.SimpleAuthManager
+  - name: AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS
+    value: "True"
+
+createUserJob:
+  enabled: false
+
 # Give the migration job more CPU so Alembic finishes faster.
-# It runs sequentially before any other pod can start, so this directly
-# reduces the overall helm --wait time.
-#
-# WHY double migrate?  On a completely fresh database, `airflow db migrate`
-# takes the create_db_from_orm → initdb code path, which initialises the core
-# Airflow tables but does NOT create the FAB-specific `alembic_version_fab`
-# table.  A second `airflow db migrate` detects the now-existing core tables,
-# switches to the upgradedb path, and runs the FAB provider alembic migrations
-# (e.g. 6709f7a774b9 "Create User and Role tables if missing"), which stamps
-# `alembic_version_fab`.  Without that table, `airflow db check-migrations`
-# (run by the wait-for-airflow-migrations init container) always returns False
-# and every pod stays stuck in Init forever.
 migrateDatabaseJob:
-  command:
-    - bash
-    - -c
-    - |
-      airflow db migrate && airflow db migrate
   resources:
     requests:
       cpu: 500m
