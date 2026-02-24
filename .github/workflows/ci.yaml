@@ -1,4 +1,4 @@
-name: CI – kind deploy & test
+name: CI
 
 on:
   push:
@@ -20,113 +20,9 @@ jobs:
       NAMESPACE: airflow-ci
 
     steps:
-      # ── Checkout ────────────────────────────────────────────────────────────
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ── Build custom Airflow image (with GHA layer cache) ──────────────────
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          tags: ${{ env.IMAGE_REPO }}:${{ env.IMAGE_TAG }}
-          # load into the local daemon so kind can pick it up
-          load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # ── Spin up a temporary kind cluster ───────────────────────────────────
-      - name: Create kind cluster
-        uses: helm/kind-action@v1
-        with:
-          cluster_name: ${{ env.KIND_CLUSTER }}
-
-      # ── Make the locally-built image available inside kind ──────────────────
-      - name: Load image into kind nodes
-        run: kind load docker-image $IMAGE_REPO:$IMAGE_TAG --name $KIND_CLUSTER
-
-      # ── Helm setup ──────────────────────────────────────────────────────────
-      - name: Add Apache Airflow Helm repo
-        run: |
-          helm repo add apache-airflow https://airflow.apache.org
-          helm repo update
-
-      # ── Background pod watcher – prints events every 30 s while helm waits ──
-      - name: Watch pods (background)
-        run: |
-          while true; do
-            echo "── $(date -u +%H:%M:%S) pod status ──────────────────────────────"
-            kubectl get pods -n $NAMESPACE -o wide 2>/dev/null || true
-            kubectl get events -n $NAMESPACE --sort-by=.lastTimestamp 2>/dev/null | tail -20 || true
-            sleep 30
-          done &
-
-      # ── Deploy Airflow ───────────────────────────────────────────────────────
-      # Uses values.prod.yaml (DAGs baked in, no dags-PVC) overridden by
-      # values.ci.yaml (LocalExecutor, pullPolicy: Never, logs persistence off).
-      - name: Deploy Airflow via Helm
-        run: |
-          # NOTE: --wait is intentionally omitted.  Helm's --wait blocks
-          # until all pods are Ready before running post-install hooks.  The
-          # migration job is a post-install hook – a deadlock on fresh DB.
-          helm upgrade --install "$CHART_NAME" apache-airflow/airflow \
-            --namespace "$NAMESPACE" --create-namespace \
-            --values helm/values.prod.yaml \
-            --values helm/values.ci.yaml \
-            --set defaultAirflowRepository="$IMAGE_REPO" \
-            --set defaultAirflowTag="$IMAGE_TAG" \
-            --timeout 7m
-
-          # 1) Wait for migration Job to finish (success or failure).
-          kubectl wait job/"${CHART_NAME}-run-airflow-migrations" \
-            -n "$NAMESPACE" --for=condition=complete --timeout=5m 2>/dev/null || \
-          kubectl wait job/"${CHART_NAME}-run-airflow-migrations" \
-            -n "$NAMESPACE" --for=condition=failed --timeout=5m 2>/dev/null || true
-
-          # 2) Wait for all Airflow pods to become Ready.
-          kubectl wait pods -n "$NAMESPACE" \
-            -l "release=${CHART_NAME}" \
-            --for=condition=Ready --timeout=5m || true
-
-      # ── Deep post-mortem (always) ────────────────────────────────────────────
-      - name: Post-mortem – pod overview
-        if: always()
-        run: kubectl get pods -n $NAMESPACE -o wide
-
-      - name: Post-mortem – describe api-server
-        if: always()
-        run: |
-          pod=$(kubectl get pod -n $NAMESPACE -l component=api-server \
-                  -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
-          if [[ -z "$pod" ]]; then
-            echo "No api-server pod found"
-          else
-            echo "=== describe pod: $pod ==="
-            kubectl describe pod "$pod" -n $NAMESPACE
-            echo ""
-            echo "=== init-container logs ==="
-            for c in $(kubectl get pod "$pod" -n $NAMESPACE \
-                         -o jsonpath='{.spec.initContainers[*].name}' 2>/dev/null); do
-              echo "--- init: $c ---"
-              kubectl logs "$pod" -n $NAMESPACE -c "$c" --tail=100 || true
-            done
-            echo ""
-            echo "=== main container logs ==="
-            kubectl logs "$pod" -n $NAMESPACE --all-containers --tail=200 || true
-            echo ""
-            echo "=== OOMKill / exit codes ==="
-            kubectl get pod "$pod" -n $NAMESPACE \
-              -o jsonpath='{range .status.containerStatuses[*]}{.name}: lastState={.lastState}{"\n"}{end}' || true
-          fi
-
-      - name: Post-mortem – all events
-        if: always()
-        run: kubectl get events -n $NAMESPACE --sort-by=.lastTimestamp
-
-      # ── Python / uv setup ───────────────────────────────────────────────────
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -138,13 +34,49 @@ jobs:
       - name: Install test dependencies
         run: uv sync --group dev
 
-      # ── Run deployment tests ─────────────────────────────────────────────────
-      # Exclusions:
-      #   test_logs_pvc_is_bound       – log PVC intentionally disabled in CI
-      #                                  (kind's local-path doesn't support RWM)
-      #   test_e2e_hello_world         – needs KubernetesExecutor to schedule task
-      #                                  pods, which requires extra RBAC setup in
-      #                                  kind; guard is already a --e2e flag skip
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          tags: ${{ env.IMAGE_REPO }}:${{ env.IMAGE_TAG }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: ${{ env.KIND_CLUSTER }}
+
+      - name: Load image into kind
+        run: kind load docker-image $IMAGE_REPO:$IMAGE_TAG --name $KIND_CLUSTER
+
+      - name: Add Airflow Helm repo
+        run: helm repo add apache-airflow https://airflow.apache.org && helm repo update
+
+      # --wait is intentionally omitted: it deadlocks on fresh DBs because the
+      # migration job is a post-install hook that Helm won't run until all pods
+      # are Ready, but pods wait for migrations to complete first.
+      - name: Deploy Airflow via Helm
+        run: |
+          helm upgrade --install "$CHART_NAME" apache-airflow/airflow \
+            --namespace "$NAMESPACE" --create-namespace \
+            --values helm/values.prod.yaml \
+            --values helm/values.ci.yaml \
+            --set defaultAirflowRepository="$IMAGE_REPO" \
+            --set defaultAirflowTag="$IMAGE_TAG" \
+            --timeout 7m
+
+          kubectl wait job/"${CHART_NAME}-run-airflow-migrations" \
+            -n "$NAMESPACE" --for=condition=complete --timeout=5m || true
+
+          kubectl wait pods -n "$NAMESPACE" \
+            -l "release=${CHART_NAME}" \
+            --for=condition=Ready --timeout=5m || true
+
       - name: Run pytest
         run: |
           uv run pytest tests/ \
@@ -154,15 +86,12 @@ jobs:
             -k "not test_logs_pvc_is_bound and not test_e2e_hello_world" \
             -v
 
-      # ── Collect logs on failure ──────────────────────────────────────────────
-      - name: Dump pod logs on failure
+      - name: Dump diagnostics on failure
         if: failure()
         run: |
-          echo "=== Pod list ==="
           kubectl get pods -n $NAMESPACE -o wide
-
+          kubectl get events -n $NAMESPACE --sort-by=.lastTimestamp
           for pod in $(kubectl get pods -n $NAMESPACE -o jsonpath='{.items[*].metadata.name}'); do
-            echo ""
-            echo "=== Logs: $pod ==="
+            echo "=== $pod ==="
             kubectl logs "$pod" -n $NAMESPACE --all-containers --tail=100 || true
           done
