@@ -14,7 +14,22 @@ executor: LocalExecutor
 # Give the migration job more CPU so Alembic finishes faster.
 # It runs sequentially before any other pod can start, so this directly
 # reduces the overall helm --wait time.
+#
+# WHY double migrate?  On a completely fresh database, `airflow db migrate`
+# takes the create_db_from_orm → initdb code path, which initialises the core
+# Airflow tables but does NOT create the FAB-specific `alembic_version_fab`
+# table.  A second `airflow db migrate` detects the now-existing core tables,
+# switches to the upgradedb path, and runs the FAB provider alembic migrations
+# (e.g. 6709f7a774b9 "Create User and Role tables if missing"), which stamps
+# `alembic_version_fab`.  Without that table, `airflow db check-migrations`
+# (run by the wait-for-airflow-migrations init container) always returns False
+# and every pod stays stuck in Init forever.
 migrateDatabaseJob:
+  command:
+    - bash
+    - -c
+    - |
+      airflow db migrate && airflow db migrate
   resources:
     requests:
       cpu: 500m

@@ -69,15 +69,27 @@ jobs:
       # values.ci.yaml (LocalExecutor, pullPolicy: Never, logs persistence off).
       - name: Deploy Airflow via Helm
         run: |
-          helm upgrade --install $CHART_NAME apache-airflow/airflow \
-            --namespace $NAMESPACE --create-namespace \
+          # NOTE: --wait is intentionally omitted.  Helm's --wait blocks
+          # until all pods are Ready before running post-install hooks.  The
+          # migration job is a post-install hook – a deadlock on fresh DB.
+          helm upgrade --install "$CHART_NAME" apache-airflow/airflow \
+            --namespace "$NAMESPACE" --create-namespace \
             --values helm/values.prod.yaml \
             --values helm/values.ci.yaml \
-            --set defaultAirflowRepository=$IMAGE_REPO \
-            --set defaultAirflowTag=$IMAGE_TAG \
-            --timeout 7m \
-            --wait \
-            --debug
+            --set defaultAirflowRepository="$IMAGE_REPO" \
+            --set defaultAirflowTag="$IMAGE_TAG" \
+            --timeout 7m
+
+          # 1) Wait for migration Job to finish (success or failure).
+          kubectl wait job/"${CHART_NAME}-run-airflow-migrations" \
+            -n "$NAMESPACE" --for=condition=complete --timeout=5m 2>/dev/null || \
+          kubectl wait job/"${CHART_NAME}-run-airflow-migrations" \
+            -n "$NAMESPACE" --for=condition=failed --timeout=5m 2>/dev/null || true
+
+          # 2) Wait for all Airflow pods to become Ready.
+          kubectl wait pods -n "$NAMESPACE" \
+            -l "release=${CHART_NAME}" \
+            --for=condition=Ready --timeout=5m || true
 
       # ── Deep post-mortem (always) ────────────────────────────────────────────
       - name: Post-mortem – pod overview
