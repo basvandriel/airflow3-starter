@@ -8,6 +8,16 @@ image:
   tag: "3.1.7"
   pullPolicy: IfNotPresent
 
+# run with the KubernetesExecutor so each task executes in its own pod
+executor: "KubernetesExecutor"
+
+# allow components (scheduler/worker) to launch pods
+allowPodLaunching: true
+
+# ensure RBAC resources are created so the service account can create pods
+rbac:
+  create: true
+
 # DAG configuration: disable built-in persistence/gitSync so that we can
 # mount an external volume (PVC) containing the dags directory.
 dags:
@@ -16,6 +26,16 @@ dags:
     enabled: false
   gitSync:
     enabled: false
+
+# logs persistence ensures that task output is written to a shared volume
+# instead of only living on the worker pod.  With KubernetesExecutor the web
+# server otherwise tries to fetch logs via the worker pod DNS name, which can
+# fail when the host cannot be resolved (see issue described in the UI).
+# mounting a PVC means every component reads the same log tree directly.
+logs:
+  persistence:
+    enabled: true
+    existingClaim: my-logs-pvc
 
 volumes:
   - name: dags
@@ -29,3 +49,9 @@ volumeMounts:
 env:
   - name: AIRFLOW__CORE__DAGS_FOLDER
     value: "/opt/airflow/dags"
+  - name: AIRFLOW__CORE__BASE_LOG_FOLDER
+    value: "/opt/airflow/logs"
+  - name: AIRFLOW__KUBERNETES_EXECUTOR__DELETE_WORKER_PODS
+    value: "False"
+  - name: AIRFLOW__KUBERNETES_EXECUTOR__DELETE_WORKER_PODS_ON_FAILURE
+    value: "False"

@@ -132,6 +132,24 @@ kubectl apply -f helm/dags-pvc.yaml -n airflow-dev
 kubectl -n airflow-dev cp -r dags/. pvc/my-dags-pvc:/workdir
 ```
 
+We also recommend mounting a separate PVC for logs (`my-logs-pvc`).
+Without shared storage the webserver will attempt to contact the worker pod
+by its DNS name to retrieve task output.  That works while the pod is
+running, but you just saw the error above: the hostname may not be known in
+cluster DNS once the pod has finished or if you're retaining pods for
+debugging.  A common workaround is to enable remote logging; the quickest
+fix in this demo is a shared volume so the UI reads logs directly.
+
+```bash
+# create the logs claim
+kubectl apply -f helm/logs-pvc.yaml -n airflow-dev
+```
+
+The `helm/values.yaml` file already mounts both PVCs under `/opt/airflow` and
+sets `AIRFLOW__CORE__BASE_LOG_FOLDER` accordingly.  After the logs claim is
+in place the scheduler/webserver will see every task log as soon as it's
+written to disk and the UI will no longer reach out to worker pods.
+
 The `helm/values.yaml` volume/volumeMount entries will mount the claim at
 `/opt/airflow/dags` in every component.  After populating the PVC, install or
 upgrade the chart as shown above; the pods will restart with the new DAGs
@@ -148,6 +166,30 @@ Other options include:
   time and install it as a package; this is ideal for production but requires
   rebuilding for DAG changes.
 > See the values examples earlier in `helm/values.yaml` for snippets.
+
+### Using KubernetesExecutor
+
+We configure the release to use the KubernetesExecutor.  Each task runs in a
+separate Kubernetes pod; the scheduler merely creates pods and watches their
+status.  The chart takes care of RBAC and service account setup (`rbac.create:
+true` and `allowPodLaunching: true` in values).
+
+To switch, set the following in `helm/values.yaml` (already done in this
+repository):
+
+```yaml
+executor: "KubernetesExecutor"
+allowPodLaunching: true
+rbac:
+  create: true
+```
+
+Then upgrade the release and your pods will restart with the new executor.
+
+The PVC sync workflow remains unchanged – the mounted `/opt/airflow/dags`
+volume is shared by all pods and the KubernetesExecutor will still load DAGs
+from there.
+
 
 ### 3. Access the UI
 
