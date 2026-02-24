@@ -16,6 +16,10 @@ NAMESPACE?=airflow-dev
 # ── Prod deployment settings ──────────────────────────────────────────────────
 PROD_CHART_NAME?=prod-airflow
 PROD_NAMESPACE?=airflow-prod
+# Pin to an explicit chart version to prevent unreviewed upstream changes from
+# reaching production. Bump this value deliberately after reviewing the release
+# notes and testing in a non-production environment first.
+AIRFLOW_CHART_VERSION?=1.19.0
 
 # ── Image targets ─────────────────────────────────────────────────────────────
 
@@ -48,6 +52,7 @@ helm-deploy-prod: push-image
 	helm repo add apache-airflow https://airflow.apache.org || true
 	helm repo update
 	helm upgrade --install $(PROD_CHART_NAME) apache-airflow/airflow \
+	  --version $(AIRFLOW_CHART_VERSION) \
 	  --namespace $(PROD_NAMESPACE) --create-namespace \
 	  --values helm/values.prod.yaml \
 	  --set defaultAirflowRepository=$(IMAGE_REPO) \
