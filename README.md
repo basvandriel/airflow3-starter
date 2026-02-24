@@ -104,25 +104,7 @@ Press Ctrl+C to stop the standalone server.
 A remote k8s cluster is ideal for testing heavy DAGs that need terabytes of data. This project includes a `helm/values.yaml` with
 custom overrides for the [official Apache Airflow Helm chart](https://airflow.apache.org/docs/helm-chart/stable/index.html).
 
-### 1. Build & push a custom image (optional)
-
-If you need the DAGs, utilities, or extra Python packages baked into the container, build and push your image:
-
-```bash
-# tag example: myregistry.example.com/airflow3-starter:latest
-./scripts/build_image.sh myregistry.example.com/airflow3-starter:latest
-docker push myregistry.example.com/airflow3-starter:latest
-```
-
-Then update `helm/values.yaml`:
-
-```yaml
-image:
-  repository: myregistry.example.com/airflow3-starter
-  tag: "latest"
-```
-
-### 2. Install the chart
+### 1. Install the chart
 
 Add the Apache Airflow repo and deploy using your kubeconfig:
 
