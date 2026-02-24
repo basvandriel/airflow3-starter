@@ -30,9 +30,13 @@ push-image: build-image
 helm-deploy: create-pvcs
 	helm repo add apache-airflow https://airflow.apache.org || true
 	helm repo update
+	# --set-file loads pod_template.yaml into the top-level `podTemplate` value
+	# which the chart uses to write pod_template_file.yaml into the config
+	# ConfigMap. No Helm-values wrapping needed in the file.
 	helm upgrade --install $(CHART_NAME) apache-airflow/airflow \
 	  --namespace $(NAMESPACE) --create-namespace \
-	  --values helm/values.yaml
+	  --values helm/values.yaml \
+	  --set-file podTemplate=helm/pod_template.yaml
 
 # ── Prod deployment ───────────────────────────────────────────────────────────
 # Builds and pushes the image, then deploys using the baked-in DAGs image.
