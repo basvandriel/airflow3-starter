@@ -76,7 +76,8 @@ jobs:
             --set defaultAirflowRepository=$IMAGE_REPO \
             --set defaultAirflowTag=$IMAGE_TAG \
             --timeout 2m \
-            --wait
+            --wait \
+            --debug
 
       # ── Show pod state for debugging if something went wrong ────────────────
       - name: Describe pods (always)
