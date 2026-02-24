@@ -195,34 +195,7 @@ task pods, but you **don't have to**.  By default the chart writes its own
 and uses that when `kubernetes_executor.podTemplate` is left unset.
 
 This repository keeps `helm/pod_template.yaml` as a convenient copy of
-the upstream default so that you can start editing in-place.  If you want
-a fresh copy later you can run:
-
-```bash
-make generate-pod-template
-```
-
-which downloads the current default template from the Apache Airflow
-GitHub repository and writes it to `helm/pod_template.yaml` (overwriting
-any existing file).
-
-The Makefile's `helm-deploy` target now includes this file automatically
-`--values helm/pod_template.yaml`, so whatever is in it is merged into the
-release.  You don't need to touch `values.yaml` unless you prefer to keep
-the override inline; edits to `helm/pod_template.yaml` are sufficient.
-
-Until you start editing you could even leave the file blank; the chart will
-simply fall back to its built-in default template from
-`files/pod-template-file.kubernetes-helm-yaml`.
-Leaving `spec` empty will inherit all of the normal defaults, but you may
-add resource limits, node selectors, or init containers here if you need
-special behaviour during development.
-
-Then upgrade the release and your pods will restart with the new executor.
-
-The PVC sync workflow remains unchanged – the mounted `/opt/airflow/dags`
-volume is shared by all pods and the KubernetesExecutor will still load DAGs
-from there.
+the upstream default so that you can start editing in-place.
 
 
 ### 3. Access the UI
