@@ -30,3 +30,8 @@ helm-uninstall:
 get-default-values:
 	# fetch the chart's default values for reference
 	helm show values apache-airflow/airflow > helm/default-values.yaml
+
+# copy local dags into the PVC and restart the dag processor pod
+# this reuses the helper shell script for the actual work
+sync-dags:
+	./scripts/sync_dags.sh $(NAMESPACE)

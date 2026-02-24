@@ -1,2 +1,6 @@
 # ignore temporary symlink directories created by configmap updates
 ..*
+
+# the debug runner is not a DAG, ignore it so the processor doesn't try to
+# parse/execute it
+utils/debug_runner.py
