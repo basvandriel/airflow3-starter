@@ -1,0 +1,63 @@
+# Production values for the official Apache Airflow Helm chart.
+# Key differences versus dev (helm/values.yaml):
+#   - Custom image with DAGs baked in at build time (no PVC needed for DAGs).
+#   - pullPolicy: Always to pick up the latest push on every pod restart.
+#   - No volumes/volumeMounts for DAGs (DAGs live inside the image).
+#   - DELETE_WORKER_PODS=True so completed task pods are cleaned up immediately.
+#   - Logs still written to a shared PVC so the UI can read them without
+#     contacting the (already deleted) worker pod.
+#
+# Deploy with:
+#   make helm-deploy-prod IMAGE=<registry>/<repo>:<tag>
+#
+# or manually:
+#   helm upgrade --install prod-airflow apache-airflow/airflow \
+#     --namespace airflow-prod --create-namespace \
+#     --values helm/values.prod.yaml \
+#     --set image.repository=<registry>/<repo> \
+#     --set image.tag=<tag>
+
+# The chart uses defaultAirflowRepository/defaultAirflowTag (not image.repository/tag).
+# Override at deploy time via --set or the IMAGE_REPO/IMAGE_TAG Makefile variables.
+# Example: registry.example.com/myteam/airflow3-starter
+defaultAirflowRepository: airflow3-starter
+defaultAirflowTag: "latest"
+images:
+  airflow:
+    pullPolicy: Always
+
+executor: "KubernetesExecutor"
+allowPodLaunching: true
+rbac:
+  create: true
+
+# DAGs are baked into the image, so no PVC mounting is needed.
+dags:
+  mountPath: "/opt/airflow/dags"
+  persistence:
+    enabled: false
+  gitSync:
+    enabled: false
+
+# Logs are still written to a shared PVC so the webserver can read them
+# directly without contacting the (already deleted) task pod.
+logs:
+  persistence:
+    enabled: true
+    existingClaim: my-logs-pvc
+
+# No extra volumes — the dags PVC is not used in production.
+volumes: []
+volumeMounts: []
+
+env:
+  - name: AIRFLOW__CORE__DAGS_FOLDER
+    value: "/opt/airflow/dags"
+  - name: AIRFLOW__CORE__BASE_LOG_FOLDER
+    value: "/opt/airflow/logs"
+  # Clean up worker pods immediately after completion; storage is not needed
+  # since logs are on the shared PVC and DAGs are inside the image.
+  - name: AIRFLOW__KUBERNETES_EXECUTOR__DELETE_WORKER_PODS
+    value: "True"
+  - name: AIRFLOW__KUBERNETES_EXECUTOR__DELETE_WORKER_PODS_ON_FAILURE
+    value: "False"

@@ -77,6 +77,11 @@ x-airflow-common:
     # The following line can be used to set a custom config file, stored in the local config folder
     AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
   volumes:
+    # Mounts the local dags/ directory into the container at runtime.
+    # This shadows (overrides) the dags that were COPY'd into the image at
+    # build time (see Dockerfile), so live edits here are picked up immediately
+    # without rebuilding the image.  In the Helm prod deployment there is no
+    # volume mount, so the image-baked dags are used instead.
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
