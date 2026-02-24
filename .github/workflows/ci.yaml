@@ -24,9 +24,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ── Build custom Airflow image ──────────────────────────────────────────
+      # ── Build custom Airflow image (with GHA layer cache) ──────────────────
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build Docker image
-        run: docker build --tag $IMAGE_REPO:$IMAGE_TAG .
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          tags: ${{ env.IMAGE_REPO }}:${{ env.IMAGE_TAG }}
+          # load into the local daemon so kind can pick it up
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       # ── Spin up a temporary kind cluster ───────────────────────────────────
       - name: Create kind cluster
