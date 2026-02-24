@@ -47,34 +47,3 @@ apiServer:
       memory: 256Mi
     limits:
       memory: 512Mi
-
-triggerer:
-  replicas: 1
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      memory: 512Mi
-
-# Ensure the bundled sub-charts use the pre-loaded kind images (no registry pull)
-statsd:
-  image:
-    pullPolicy: IfNotPresent
-  resources:
-    requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
-      memory: 128Mi
-
-postgresql:
-  image:
-    pullPolicy: IfNotPresent
-  primary:
-    resources:
-      requests:
-        cpu: 100m
-        memory: 256Mi
-      limits:
-        memory: 512Mi

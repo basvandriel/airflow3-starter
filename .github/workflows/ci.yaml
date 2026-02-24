@@ -48,43 +48,6 @@ jobs:
       - name: Load image into kind nodes
         run: kind load docker-image $IMAGE_REPO:$IMAGE_TAG --name $KIND_CLUSTER
 
-      # ── Cache third-party images pulled by the Helm chart ──────────────────
-      # Images are identified by rendering the chart; currently:
-      #   - bitnamilegacy/postgresql:16.1.0-debian-11-r15
-      #   - quay.io/prometheus/statsd-exporter:v0.28.0
-      # On a cache hit we load the tarball into Docker and then into kind so
-      # nothing needs to be pulled from a registry at helm-install time.
-      # On a cache miss we pull, pre-load into kind, and save a fresh tarball.
-      - name: Restore third-party image cache
-        id: img-cache
-        uses: actions/cache@v4
-        with:
-          path: /tmp/kind-images.tar
-          key: kind-images-postgresql-16.1.0-debian-11-r15-statsd-v0.28.0
-
-      - name: Load third-party images from cache
-        if: steps.img-cache.outputs.cache-hit == 'true'
-        run: docker load -i /tmp/kind-images.tar
-
-      - name: Pull third-party images (cache miss)
-        if: steps.img-cache.outputs.cache-hit != 'true'
-        run: |
-          docker pull docker.io/bitnamilegacy/postgresql:16.1.0-debian-11-r15
-          docker pull quay.io/prometheus/statsd-exporter:v0.28.0
-
-      - name: Save third-party images to cache
-        if: steps.img-cache.outputs.cache-hit != 'true'
-        run: |
-          docker save \
-            docker.io/bitnamilegacy/postgresql:16.1.0-debian-11-r15 \
-            quay.io/prometheus/statsd-exporter:v0.28.0 \
-            -o /tmp/kind-images.tar
-
-      - name: Pre-load third-party images into kind
-        run: |
-          kind load docker-image docker.io/bitnamilegacy/postgresql:16.1.0-debian-11-r15 --name $KIND_CLUSTER
-          kind load docker-image quay.io/prometheus/statsd-exporter:v0.28.0 --name $KIND_CLUSTER
-
       # ── Helm setup ──────────────────────────────────────────────────────────
       - name: Add Apache Airflow Helm repo
         run: |
