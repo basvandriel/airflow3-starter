@@ -57,7 +57,10 @@ triggerer:
     limits:
       memory: 512Mi
 
+# Ensure the bundled sub-charts use the pre-loaded kind images (no registry pull)
 statsd:
+  image:
+    pullPolicy: IfNotPresent
   resources:
     requests:
       cpu: 50m
@@ -66,6 +69,8 @@ statsd:
       memory: 128Mi
 
 postgresql:
+  image:
+    pullPolicy: IfNotPresent
   primary:
     resources:
       requests:
