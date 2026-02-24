@@ -39,31 +39,3 @@ logs:
   persistence:
     enabled: false
     existingClaim: ""
-
-# One replica per component is enough for CI smoke-tests.
-scheduler:
-  replicas: 1
-  resources:
-    requests:
-      cpu: 100m
-      memory: 512Mi
-    limits:
-      memory: 1Gi
-
-dagProcessor:
-  replicas: 1
-  resources:
-    requests:
-      cpu: 100m
-      memory: 512Mi
-    limits:
-      memory: 1Gi
-
-apiServer:
-  replicas: 1
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      memory: 512Mi
