@@ -11,14 +11,10 @@
 
 executor: LocalExecutor
 
-images:
-  airflow:
-    pullPolicy: Never
-
 # Give the migration job more CPU so Alembic finishes faster.
 # It runs sequentially before any other pod can start, so this directly
 # reduces the overall helm --wait time.
-migrationJob:
+migrateDatabaseJob:
   resources:
     requests:
       cpu: 500m
@@ -26,6 +22,13 @@ migrationJob:
     limits:
       cpu: "1"
       memory: 512Mi
+
+# Extend the init-container wait timeout for migrations.
+# Default is 60s which is too short on a constrained kind node.
+images:
+  airflow:
+    pullPolicy: Never
+  migrationsWaitTimeout: 300
 
 logs:
   persistence:
