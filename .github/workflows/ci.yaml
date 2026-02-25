@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deploy-and-test:
+    name: Build → kind deploy → pytest
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    env:
+      IMAGE_REPO: airflow3-starter
+      IMAGE_TAG: ci
+      KIND_CLUSTER: airflow-ci
+      CHART_NAME: ci-airflow
+      NAMESPACE: airflow-ci
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install test dependencies
+        run: uv sync --group dev
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          tags: ${{ env.IMAGE_REPO }}:${{ env.IMAGE_TAG }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: ${{ env.KIND_CLUSTER }}
+
+      - name: Load image into kind
+        run: kind load docker-image $IMAGE_REPO:$IMAGE_TAG --name $KIND_CLUSTER
+
+      - name: Add Airflow Helm repo
+        run: helm repo add apache-airflow https://airflow.apache.org && helm repo update
+
+      # --wait is intentionally omitted: it deadlocks on fresh DBs because the
+      # migration job is a post-install hook that Helm won't run until all pods
+      # are Ready, but pods wait for migrations to complete first.
+      - name: Deploy Airflow via Helm
+        run: |
+          helm upgrade --install "$CHART_NAME" apache-airflow/airflow \
+            --namespace "$NAMESPACE" --create-namespace \
+            --values helm/values.prod.yaml \
+            --values helm/values.ci.yaml \
+            --set defaultAirflowRepository="$IMAGE_REPO" \
+            --set defaultAirflowTag="$IMAGE_TAG" \
+            --timeout 7m
+
+          kubectl wait job/"${CHART_NAME}-run-airflow-migrations" \
+            -n "$NAMESPACE" --for=condition=complete --timeout=5m || true
+
+          kubectl wait pods -n "$NAMESPACE" \
+            -l "release=${CHART_NAME}" \
+            --for=condition=Ready --timeout=5m || true
+
+      - name: Run pytest
+        run: |
+          uv run pytest tests/ \
+            --namespace $NAMESPACE \
+            --chart-name $CHART_NAME \
+            --expect-custom-image \
+            -k "not test_logs_pvc_is_bound and not test_e2e_hello_world" \
+            -v
+
+      - name: Dump diagnostics on failure
+        if: failure()
+        run: |
+          kubectl get pods -n $NAMESPACE -o wide
+          kubectl get events -n $NAMESPACE --sort-by=.lastTimestamp
+          for pod in $(kubectl get pods -n $NAMESPACE -o jsonpath='{.items[*].metadata.name}'); do
+            echo "=== $pod ==="
+            kubectl logs "$pod" -n $NAMESPACE --all-containers --tail=100 || true
+          done

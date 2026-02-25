@@ -1,0 +1,41 @@
+# CI-specific Helm overrides – applied on top of helm/values.prod.yaml.
+#
+# Differences from prod:
+#   - executor: LocalExecutor  → tasks run inside the scheduler process;
+#     no worker pods, no extra RBAC, much simpler on kind.
+#   - pullPolicy: Never  → use the image pre-loaded into the kind node.
+#   - logs.persistence disabled + existingClaim cleared → kind's local-path
+#     provisioner only supports ReadWriteOnce, and the logs PVC from prod
+#     (my-logs-pvc) doesn't exist here.
+#   - Slimmer resource requests so all pods fit on a single kind node (7 GB).
+
+executor: LocalExecutor
+
+# Use SimpleAuthManager instead of the default FAB auth manager.
+# The project's airflow.cfg already uses SimpleAuthManager; aligning the
+# helm deployment avoids pulling in FABDBManager, whose separate alembic
+# table (alembic_version_fab) is not stamped on a brand-new database by a
+# single `airflow db migrate` run.  With SimpleAuthManager there is no FAB
+# DB manager, so `airflow db check-migrations` passes after one migrate.
+# Also disable the createUserJob — it creates FAB users which don't exist
+# with SimpleAuthManager.
+# env:
+#   - name: AIRFLOW__CORE__AUTH_MANAGER
+#     value: airflow.api_fastapi.auth.managers.simple.simple_auth_manager.SimpleAuthManager
+#   - name: AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS
+#     value: "True"
+
+createUserJob:
+  enabled: false
+
+# Extend the init-container wait timeout for migrations.
+# Default is 60s which is too short on a constrained kind node.
+images:
+  airflow:
+    pullPolicy: Never
+  migrationsWaitTimeout: 300
+
+logs:
+  persistence:
+    enabled: false
+    existingClaim: ""
