@@ -80,8 +80,8 @@ jobs:
       - name: Run pytest
         run: |
           uv run pytest tests/ \
-            --namespace $NAMESPACE \
-            --chart-name $CHART_NAME \
+            --namespace "$NAMESPACE" \
+            --chart-name "$CHART_NAME" \
             --expect-custom-image \
             -k "not test_logs_pvc_is_bound and not test_e2e_hello_world" \
             -v
