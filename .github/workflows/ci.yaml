@@ -89,9 +89,9 @@ jobs:
       - name: Dump diagnostics on failure
         if: failure()
         run: |
-          kubectl get pods -n $NAMESPACE -o wide
-          kubectl get events -n $NAMESPACE --sort-by=.lastTimestamp
-          for pod in $(kubectl get pods -n $NAMESPACE -o jsonpath='{.items[*].metadata.name}'); do
+          kubectl get pods -n "$NAMESPACE" -o wide
+          kubectl get events -n "$NAMESPACE" --sort-by=.lastTimestamp
+          for pod in $(kubectl get pods -n "$NAMESPACE" -o jsonpath='{.items[*].metadata.name}'); do
             echo "=== $pod ==="
-            kubectl logs "$pod" -n $NAMESPACE --all-containers --tail=100 || true
+            kubectl logs "$pod" -n "$NAMESPACE" --all-containers --tail=100 || true
           done
