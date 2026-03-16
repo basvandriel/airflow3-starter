@@ -235,6 +235,10 @@ so imports and subpackages behave exactly as they do locally.  No
 > ```bash
 > kubectl -n airflow-dev port-forward svc/dev-airflow-api-server 8080:8080
 > ```
+> Or use the helper script that finds the API pod automatically:
+> ```bash
+> ./scripts/port_forward_api.sh airflow-dev
+> ```
 > open http://localhost:8080 and use the credentials shown by Helm (`admin/admin`).
 
 This setup gives you a development environment running in your remote
