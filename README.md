@@ -197,6 +197,36 @@ and uses that when `kubernetes_executor.podTemplate` is left unset.
 This repository keeps `helm/pod_template.yaml` as a convenient copy of
 the upstream default so that you can start editing in-place.
 
+### Using Kueue for pod queueing
+
+If you want task pods to be queued (instead of being created immediately),
+Kueue can intercept pod admission and only admit pods when resources are
+available.
+
+This repository includes a helper script that installs Kueue into the same
+namespace as the Airflow deployment, and creates a minimal `ClusterQueue`
++ `LocalQueue` setup. The pod template is already annotated to use the
+queue name `airflow`.
+
+```bash
+make install-kueue
+```
+
+Or, run the script directly:
+
+```bash
+./scripts/install_kueue.sh airflow-dev
+```
+
+Once Kueue is running, tasks will be queued automatically as long as you
+keep the pod template annotation:
+
+```yaml
+metadata:
+  annotations:
+    kueue.x-k8s.io/queue-name: "airflow"
+```
+
 
 ### 3. Access the UI
 

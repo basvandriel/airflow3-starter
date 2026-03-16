@@ -10,9 +10,13 @@ metadata:
     release: dev-airflow
   annotations:
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+    # Kueue will only admit pods that are annotated with a queue name.
+    # This allows KubernetesExecutor to defer pod creation until resources are available.
+    kueue.x-k8s.io/queue-name: "airflow"
 spec:
   containers:
     - name: base
+      # This currently does not run on a custom image, but we can configure kueue containers
       image: apache/airflow:3.1.7
       imagePullPolicy: IfNotPresent
       securityContext:

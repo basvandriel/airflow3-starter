@@ -25,11 +25,12 @@ build-image:
 push-image: build-image
 	docker push $(IMAGE)
 
+setup-helm-repos:
+	helm repo add apache-airflow https://airflow.apache.org || true
+	helm repo update
 # ── Dev deployment ────────────────────────────────────────────────────────────
 
 helm-deploy: create-pvcs
-	helm repo add apache-airflow https://airflow.apache.org || true
-	helm repo update
 	# --set-file loads pod_template.yaml into the top-level `podTemplate` value
 	# which the chart uses to write pod_template_file.yaml into the config
 	# ConfigMap. No Helm-values wrapping needed in the file.
@@ -45,8 +46,7 @@ helm-deploy: create-pvcs
 
 helm-deploy-prod: push-image
 	kubectl apply -f helm/logs-pvc.yaml -n $(PROD_NAMESPACE)
-	helm repo add apache-airflow https://airflow.apache.org || true
-	helm repo update
+	
 	helm upgrade --install $(PROD_CHART_NAME) apache-airflow/airflow \
 	  --namespace $(PROD_NAMESPACE) --create-namespace \
 	  --values helm/values.prod.yaml \
@@ -57,6 +57,10 @@ helm-uninstall:
 	helm uninstall $(CHART_NAME) -n $(NAMESPACE)
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+# install Kueue in the same namespace as the Airflow deployment
+install-kueue:
+	./scripts/install_kueue.sh $(NAMESPACE)
 
 # copy local dags into the PVC and restart the dag processor pod
 # this reuses the helper shell script for the actual work
