@@ -5,6 +5,8 @@ from kubernetes import client as k8s_client
 from kubernetes.client import CoreV1Api
 from kubernetes.client.exceptions import ApiException
 
+from tests.utils import exec_in_pod
+
 
 def test_e2e_hello_world(
     k8s: CoreV1Api, namespace: str, chart_name: str, e2e: bool
@@ -18,15 +20,12 @@ def test_e2e_hello_world(
         if p.metadata.name.startswith(f"{chart_name}-api-server")
     )
 
-    output = k8s_client.CoreV1Api().connect_get_namespaced_pod_exec(
-        api_pod.metadata.name,
+    output = exec_in_pod(
+        k8s,
         namespace,
+        api_pod.metadata.name,
         container="api-server",
         command=["airflow", "dags", "trigger", "hello_world"],
-        stderr=True,
-        stdin=False,
-        stdout=True,
-        tty=False,
     )
     assert "queued" in output or "triggered" in output
 
