@@ -10,7 +10,12 @@
 
 set -euo pipefail
 
-NAMESPACE=${1:-airflow-dev}
+# Kueue is installed in its own namespace (kueue-system) so that its pod
+# webhook is not excluded from the Airflow workload namespace.  If Kueue
+# were installed in the same namespace as Airflow it would auto-exclude that
+# namespace, meaning Airflow task pods would bypass Kueue admission.
+AIRFLOW_NAMESPACE=${1:-airflow-dev}
+KUEUE_NAMESPACE=${KUEUE_NAMESPACE:-kueue-system}
 RELEASE_NAME=${RELEASE_NAME:-kueue}
 KUEUE_VERSION=${KUEUE_VERSION:-0.16.2}
 QUEUE_NAME=${QUEUE_NAME:-airflow}
@@ -28,22 +33,30 @@ for cmd in kubectl helm; do
   fi
 done
 
-# Ensure namespace exists (helm --create-namespace is convenient, but it may
-# be confusing if the user has a misconfigured kubeconfig / context).
-if ! kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
-  info "Namespace '$NAMESPACE' does not exist; creating it."
-  kubectl create namespace "$NAMESPACE"
+# Ensure Airflow namespace exists.
+if ! kubectl get namespace "$AIRFLOW_NAMESPACE" >/dev/null 2>&1; then
+  info "Namespace '$AIRFLOW_NAMESPACE' does not exist; creating it."
+  kubectl create namespace "$AIRFLOW_NAMESPACE"
 fi
 
-info "Installing Kueue into namespace '$NAMESPACE' (release: $RELEASE_NAME, version: $KUEUE_VERSION)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(dirname "$SCRIPT_DIR")"
+KUEUE_VALUES="${KUEUE_VALUES:-$REPO_DIR/helm/kueue-values.yaml}"
+
+info "Installing Kueue into namespace '$KUEUE_NAMESPACE' (release: $RELEASE_NAME, version: $KUEUE_VERSION)"
+info "Kueue will watch the Airflow namespace '$AIRFLOW_NAMESPACE'."
+info "Using values file: $KUEUE_VALUES"
 helm upgrade --install "$RELEASE_NAME" oci://registry.k8s.io/kueue/charts/kueue \
   --version "$KUEUE_VERSION" \
-  --namespace "$NAMESPACE" --create-namespace \
-  --wait --timeout 300s
+  --namespace "$KUEUE_NAMESPACE" --create-namespace \
+  --values "$KUEUE_VALUES"
+
+kubectl rollout status deployment/kueue-controller-manager -n "$KUEUE_NAMESPACE" --timeout=300s
 
 info "Applying Kueue resources (ClusterQueue + LocalQueue) from helm/kueue-resources.yaml"
 
 kubectl apply -f "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/helm/kueue-resources.yaml"
 
-info "Kueue install complete. Pods must be annotated with kueue.x-k8s.io/queue-name=$QUEUE_NAME to use this queue."
+info "Kueue install complete."
+info "Pods in '$AIRFLOW_NAMESPACE' annotated with kueue.x-k8s.io/queue-name=$QUEUE_NAME will be queued."
 info "The Airflow pod template in helm/pod_template.yaml already adds this annotation (if you are using it)."

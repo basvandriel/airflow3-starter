@@ -8,11 +8,10 @@ metadata:
     tier: airflow
     component: worker
     release: dev-airflow
+    # Kueue queue-name MUST be a label (not annotation) for pod integration to work.
+    kueue.x-k8s.io/queue-name: "airflow"
   annotations:
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
-    # Kueue will only admit pods that are annotated with a queue name.
-    # This allows KubernetesExecutor to defer pod creation until resources are available.
-    kueue.x-k8s.io/queue-name: "airflow"
 spec:
   containers:
     - name: base
