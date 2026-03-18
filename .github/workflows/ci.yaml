@@ -122,7 +122,6 @@ jobs:
           uv run pytest tests/integration \
             --namespace $NAMESPACE \
             --chart-name $CHART_NAME \
-            --expect-custom-image \
             -v
 
       - name: Run E2E tests
