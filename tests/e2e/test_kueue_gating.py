@@ -1,3 +1,4 @@
+import json
 import time
 
 import pytest
@@ -27,30 +28,38 @@ def test_e2e_hello_world(
         container="api-server",
         command=["airflow", "dags", "trigger", "hello_world"],
     )
-    assert "queued" in output or "triggered" in output
+    assert "queued" in output or "triggered" in output, (
+        f"DAG trigger did not return expected output:\n{output}"
+    )
 
+    # Poll DAG run state — works with any executor (LocalExecutor, KubernetesExecutor).
+    # We don't look for pods because LocalExecutor runs tasks inside the scheduler.
     deadline = time.time() + 120
-    seen_pod = False
-
     while time.time() < deadline:
         time.sleep(5)
-        task_pods = [
-            p
-            for p in k8s.list_namespaced_pod(namespace).items
-            if "hello" in p.metadata.name and p.status.phase != "Terminating"
-        ]
-
-        if task_pods:
-            seen_pod = True
-            phase = task_pods[0].status.phase
-            if phase == "Succeeded":
+        raw = exec_in_pod(
+            k8s,
+            namespace,
+            api_pod.metadata.name,
+            container="api-server",
+            command=["airflow", "dags", "list-runs", "-d", "hello_world", "-o", "json"],
+        )
+        # The CLI may emit WARN/INFO lines before the JSON array; find the last `[`.
+        bracket = raw.rfind("[")
+        if bracket == -1:
+            continue
+        try:
+            runs = json.loads(raw[bracket:])
+        except json.JSONDecodeError:
+            continue
+        for run in runs:
+            state = run.get("state", "")
+            if state == "success":
                 return
-            if phase == "Failed":
-                pytest.fail(f"Task pod failed (phase: {phase})")
-        elif seen_pod:
-            return
+            if state in ("failed", "upstream_failed"):
+                pytest.fail(f"hello_world DAG run ended in state '{state}'")
 
-    pytest.fail(f"hello_world did not complete within 120s (pod seen: {seen_pod})")
+    pytest.fail("hello_world did not reach state 'success' within 120s")
 
 
 def test_kueue_e2e_gates_second_pod(k8s: CoreV1Api, namespace: str, e2e: bool) -> None:
