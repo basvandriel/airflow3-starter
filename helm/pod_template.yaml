@@ -8,11 +8,14 @@ metadata:
     tier: airflow
     component: worker
     release: dev-airflow
+    # Kueue queue-name MUST be a label (not annotation) for pod integration to work.
+    kueue.x-k8s.io/queue-name: "airflow"
   annotations:
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
 spec:
   containers:
     - name: base
+      # This currently does not run on a custom image, but we can configure kueue containers
       image: apache/airflow:3.1.7
       imagePullPolicy: IfNotPresent
       securityContext:

@@ -29,6 +29,11 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=False,
         help="Run end-to-end DAG trigger test",
     )
+    parser.addoption(
+        "--kueue-namespace",
+        default="kueue-system",
+        help="Namespace where Kueue controller is installed",
+    )
 
 
 # -- Kubernetes client --
@@ -62,3 +67,8 @@ def expect_custom_image(request: pytest.FixtureRequest) -> bool:
 @pytest.fixture(scope="session")
 def e2e(request: pytest.FixtureRequest) -> bool:
     return request.config.getoption("--e2e")
+
+
+@pytest.fixture(scope="session")
+def kueue_namespace(request: pytest.FixtureRequest) -> str:
+    return request.config.getoption("--kueue-namespace")

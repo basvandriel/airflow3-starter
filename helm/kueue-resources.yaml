@@ -1,0 +1,36 @@
+# Kueue queue resources used by Airflow's KubernetesExecutor.
+#
+# Apply via:
+#   kubectl apply -f helm/kueue-resources.yaml
+#
+# If you want separate configs per environment, copy this file and adjust the
+# namespace / names as needed (e.g. `helm/kueue-resources-prod.yaml`).
+
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: ResourceFlavor
+metadata:
+  name: "default-flavor"
+---
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: ClusterQueue
+metadata:
+  name: "airflow-cluster-queue"
+spec:
+  namespaceSelector: {} # match all namespaces
+  resourceGroups:
+  - coveredResources: ["cpu", "memory"]
+    flavors:
+    - name: "default-flavor"
+      resources:
+      - name: "cpu"
+        nominalQuota: 500m
+      - name: "memory"
+        nominalQuota: 1Gi
+---
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: LocalQueue
+metadata:
+  namespace: "airflow-dev"
+  name: "airflow"
+spec:
+  clusterQueue: "airflow-cluster-queue"

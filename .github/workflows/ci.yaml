@@ -77,14 +77,61 @@ jobs:
             -l "release=${CHART_NAME}" \
             --for=condition=Ready --timeout=5m || true
 
-      - name: Run pytest
+      - name: Install Kueue (helm)
         run: |
-          uv run pytest tests/ \
+          helm upgrade --install kueue oci://registry.k8s.io/kueue/charts/kueue \
+            --version 0.16.2 \
+            --namespace kueue-system --create-namespace \
+            --values helm/kueue-values.yaml
+
+      - name: Wait for Kueue controller rollout
+        run: |
+          kubectl rollout status deployment/kueue-controller-manager \
+            -n kueue-system --timeout=300s
+
+      - name: Wait for Kueue webhook endpoint
+        run: |
+          echo "Waiting for Kueue webhook endpoint to be ready..."
+          until kubectl get endpoints/kueue-webhook-service -n kueue-system \
+              -o jsonpath='{.subsets[0].addresses[0].ip}' 2>/dev/null | grep -qE '^[0-9]'; do
+            sleep 2
+          done
+          echo "Webhook endpoint ready."
+
+      - name: Apply Kueue resources (ClusterQueue + LocalQueue)
+        run: |
+          # The endpoint IP being registered doesn't guarantee the webhook TLS cert
+          # is fully loaded — retry the apply until it succeeds (idempotent).
+          deadline=$((SECONDS + 120))
+          until sed "s|namespace: \"airflow-dev\"|namespace: \"$NAMESPACE\"|g" \
+              helm/kueue-resources.yaml | kubectl apply -f -; do
+            if [ $SECONDS -ge $deadline ]; then
+              echo "Timed out waiting for Kueue webhook to accept requests"
+              exit 1
+            fi
+            echo "Webhook not ready yet, retrying in 5s..."
+            sleep 5
+          done
+
+      - name: Run unit tests
+        run: |
+          uv run pytest tests/unit -v
+
+      - name: Run integration tests
+        run: |
+          uv run pytest tests/integration \
             --namespace $NAMESPACE \
             --chart-name $CHART_NAME \
-            --expect-custom-image \
-            -k "not test_logs_pvc_is_bound and not test_e2e_hello_world" \
             -v
+
+      - name: Run E2E tests
+        run: |
+          uv run pytest tests/e2e/test_kueue_gating.py \
+            --namespace $NAMESPACE \
+            --chart-name $CHART_NAME \
+            --kueue-namespace kueue-system \
+            --e2e \
+            -v -s
 
       - name: Dump diagnostics on failure
         if: failure()
