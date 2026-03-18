@@ -54,8 +54,12 @@ helm upgrade --install "$RELEASE_NAME" oci://registry.k8s.io/kueue/charts/kueue 
 kubectl rollout status deployment/kueue-controller-manager -n "$KUEUE_NAMESPACE" --timeout=300s
 
 info "Applying Kueue resources (ClusterQueue + LocalQueue) from helm/kueue-resources.yaml"
+info "LocalQueue will be created in namespace '$AIRFLOW_NAMESPACE'"
 
-kubectl apply -f "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/helm/kueue-resources.yaml"
+# Substitute the namespace placeholder (default: airflow-dev) with the actual
+# target namespace so the LocalQueue lands in the right place.
+sed "s|namespace: \"airflow-dev\"|namespace: \"$AIRFLOW_NAMESPACE\"|g" \
+  "$REPO_DIR/helm/kueue-resources.yaml" | kubectl apply -f -
 
 info "Kueue install complete."
 info "Pods in '$AIRFLOW_NAMESPACE' annotated with kueue.x-k8s.io/queue-name=$QUEUE_NAME will be queued."

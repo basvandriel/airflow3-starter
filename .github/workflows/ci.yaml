@@ -77,14 +77,27 @@ jobs:
             -l "release=${CHART_NAME}" \
             --for=condition=Ready --timeout=5m || true
 
+      - name: Install Kueue
+        run: |
+          AIRFLOW_NAMESPACE=$NAMESPACE bash scripts/install_kueue.sh "$NAMESPACE"
+
       - name: Run pytest
         run: |
           uv run pytest tests/ \
             --namespace $NAMESPACE \
             --chart-name $CHART_NAME \
             --expect-custom-image \
-            -k "not test_logs_pvc_is_bound and not test_e2e_hello_world" \
+            -k "not test_logs_pvc_is_bound and not test_e2e_hello_world and not test_kueue_e2e" \
             -v
+
+      - name: Run E2E tests
+        run: |
+          uv run pytest tests/test_deployment.py::test_kueue_e2e_gates_second_pod \
+            --namespace $NAMESPACE \
+            --chart-name $CHART_NAME \
+            --kueue-namespace kueue-system \
+            --e2e \
+            -v -s
 
       - name: Dump diagnostics on failure
         if: failure()

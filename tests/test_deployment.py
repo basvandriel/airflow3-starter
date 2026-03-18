@@ -307,14 +307,22 @@ def test_kueue_e2e_gates_second_pod(k8s: CoreV1Api, namespace: str, e2e: bool) -
 
     pod_names = ["kueue-e2e-test-a", "kueue-e2e-test-b"]
     labels = {"kueue.x-k8s.io/queue-name": "airflow"}
+    ADMISSION_GATE = "kueue.x-k8s.io/admission"
+    ADMISSION_TIMEOUT = 30
 
-    # Clean up any leftover pods from a previous run and wait for full removal.
+    print(f"\n[e2e] namespace={namespace}  pods={pod_names}")
+    print(f"[e2e] ClusterQueue quota: 1Gi — expecting exactly 1 pod admitted, 1 gated")
+
+    # --- cleanup -----------------------------------------------------------
+    print("[e2e] Deleting leftover pods from previous runs (if any)...")
     for name in pod_names:
         try:
             k8s.delete_namespaced_pod(name, namespace)
+            print(f"[e2e]   deleted {name}")
         except ApiException:
             pass
 
+    print("[e2e] Waiting for pods to be fully removed...")
     deadline = time.time() + 60
     for name in pod_names:
         while time.time() < deadline:
@@ -323,9 +331,12 @@ def test_kueue_e2e_gates_second_pod(k8s: CoreV1Api, namespace: str, e2e: bool) -
                 time.sleep(1)
             except ApiException as exc:
                 if exc.status == 404:
+                    print(f"[e2e]   {name} gone")
                     break
                 raise
 
+    # --- create pods -------------------------------------------------------
+    print("[e2e] Creating test pods (each requests 1Gi memory)...")
     for name in pod_names:
         k8s.create_namespaced_pod(
             namespace,
@@ -348,17 +359,21 @@ def test_kueue_e2e_gates_second_pod(k8s: CoreV1Api, namespace: str, e2e: bool) -
                 ),
             ),
         )
+        print(f"[e2e]   created {name}")
 
-    # Poll until Kueue admits exactly one pod.
+    # --- poll for admission ------------------------------------------------
     # Both pods start with kueue.x-k8s.io/admission (quota gate) and possibly
     # kueue.x-k8s.io/topology (TAS gate) set.  Kueue removes the admission
     # gate from the pod it admits; the topology gate is a separate concern.
-    ADMISSION_GATE = "kueue.x-k8s.io/admission"
-    ADMISSION_TIMEOUT = 30
+    print(
+        f"[e2e] Polling for Kueue admission gate removal (timeout={ADMISSION_TIMEOUT}s)..."
+    )
     deadline = time.time() + ADMISSION_TIMEOUT
     admission_gates: dict[str, bool] = {}
+    iteration = 0
     while time.time() < deadline:
         time.sleep(2)
+        iteration += 1
         pods = {name: k8s.read_namespaced_pod(name, namespace) for name in pod_names}
         admission_gates = {
             name: any(
@@ -366,12 +381,23 @@ def test_kueue_e2e_gates_second_pod(k8s: CoreV1Api, namespace: str, e2e: bool) -
             )
             for name, pod in pods.items()
         }
+        gate_summary = ", ".join(
+            f"{n}={'gated' if gated else 'admitted'}"
+            for n, gated in admission_gates.items()
+        )
+        all_gates = {
+            name: [g.name for g in (pod.spec.scheduling_gates or [])]
+            for name, pod in pods.items()
+        }
+        print(f"[e2e]   poll #{iteration}: {gate_summary}  (all gates: {all_gates})")
         still_waiting = sum(admission_gates.values())
         if still_waiting == 1:
+            print(f"[e2e] Target state reached after {iteration} polls.")
             break
 
     still_waiting = sum(admission_gates.values())
     admitted_count = len(pod_names) - still_waiting
+    print(f"[e2e] Final: admitted={admitted_count} gated={still_waiting}")
 
     # Exactly one pod should have its admission gate removed (quota admitted),
     # the other should still hold the admission gate (queued, awaiting quota).
@@ -383,7 +409,9 @@ def test_kueue_e2e_gates_second_pod(k8s: CoreV1Api, namespace: str, e2e: bool) -
         f"Expected exactly 1 pod still holding admission gate, got {still_waiting}. "
         f"Admission gates still present: {admission_gates}"
     )
-    # Clean up
+
+    # --- cleanup -----------------------------------------------------------
+    print("[e2e] Test passed. Cleaning up pods...")
     for name in pod_names:
         try:
             k8s.delete_namespaced_pod(name, namespace)
