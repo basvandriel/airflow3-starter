@@ -23,10 +23,28 @@ def test_pod_is_ready(k8s, namespace: str, chart_name: str, component: str) -> N
     assert wait_for_ready(k8s, namespace, pod.metadata.name)
 
 
-def test_dag_processor_image_is_present(k8s, namespace: str, chart_name: str) -> None:
+def test_dag_processor_image_is_present(
+    k8s, namespace: str, chart_name: str, request
+) -> None:
     pod = find_pod(k8s, namespace, f"{chart_name}-dag-processor")
     assert pod is not None, "No dag-processor pod found"
-    assert pod.spec.containers[0].image, "dag-processor container has no image set"
+    image = pod.spec.containers[0].image
+    assert image, "dag-processor container has no image set"
+
+    # When the --expect-custom-image flag is set in pytest/CI, assert that we are not
+    # using the upstream Apache Airflow image for the dag-processor.
+    expect_custom_image = False
+    try:
+        expect_custom_image = bool(request.config.getoption("expect_custom_image"))
+    except Exception:
+        # If the option is not defined (e.g., local runs), skip the custom-image check.
+        expect_custom_image = False
+
+    if expect_custom_image:
+        assert "apache/airflow" not in image, (
+            "Expected dag-processor to use a custom image when --expect-custom-image "
+            "is set, but an upstream Apache Airflow image was detected."
+        )
 
 
 def test_dag_file_exists_in_pod(k8s, namespace: str, chart_name: str) -> None:
