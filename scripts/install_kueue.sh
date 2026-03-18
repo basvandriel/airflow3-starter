@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Install Kueue into the same namespace as the Airflow deployment and create a
-# minimal ClusterQueue + LocalQueue for Airflow's KubernetesExecutor pods.
+# Install the Kueue Helm chart into the KUEUE_NAMESPACE (default: kueue-system).
+# This script only installs Kueue; ClusterQueue/LocalQueue resources are applied
+# separately (for example via scripts/apply_kueue_resources.sh).
 #
 # Usage:
-#   ./scripts/install_kueue.sh [namespace]
+#   ./scripts/install_kueue.sh
 #
-# Example:
-#   ./scripts/install_kueue.sh airflow-dev
+# Example (override namespace):
+#   KUEUE_NAMESPACE=airflow-dev ./scripts/install_kueue.sh
 
 set -euo pipefail
 
