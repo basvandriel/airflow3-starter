@@ -48,7 +48,7 @@ def test_e2e_hello_world(
         )
         last_raw = raw
 
-        # The CLI may emit WARN/INFO lines before the JSON array; find the last `[`. 
+        # The CLI may emit WARN/INFO lines before the JSON array; find the last `[`.
         bracket = raw.rfind("[")
         if bracket == -1:
             continue
@@ -72,6 +72,8 @@ def test_e2e_hello_world(
         "hello_world did not reach state 'success' within 300s. "
         f"Last list-runs output:\n{last_raw}"
     )
+
+
 def test_kueue_e2e_gates_second_pod(k8s: CoreV1Api, namespace: str, e2e: bool) -> None:
     if not e2e:
         pytest.skip("--e2e not set")
