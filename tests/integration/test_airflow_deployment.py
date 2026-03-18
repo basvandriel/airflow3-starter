@@ -3,6 +3,7 @@ import subprocess
 
 import pytest
 
+from kubernetes.client.exceptions import ApiException
 from tests.utils import exec_in_pod, find_pod, wait_for_ready
 
 
@@ -71,7 +72,7 @@ def test_logs_pvc_is_bound(k8s, namespace: str) -> None:
 
     try:
         pvc = k8s.read_namespaced_persistent_volume_claim("my-logs-pvc", namespace)
-    except Exception as e:
+    except ApiException as e:
         if getattr(e, "status", None) == 404:
             pytest.skip("my-logs-pvc not present")
         raise
@@ -82,7 +83,7 @@ def test_logs_pvc_is_bound(k8s, namespace: str) -> None:
 def test_dags_pvc_is_bound_if_present(k8s, namespace: str) -> None:
     try:
         pvc = k8s.read_namespaced_persistent_volume_claim("my-dags-pvc", namespace)
-    except Exception as e:  # pragma: no cover
+    except ApiException as e:  # pragma: no cover
         # kube-agnostic deployments may not have a dags PVC.
         if getattr(e, "status", None) == 404:
             pytest.skip("my-dags-pvc not present (expected for prod)")
