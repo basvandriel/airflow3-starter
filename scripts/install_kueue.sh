@@ -45,5 +45,5 @@ helm upgrade --install "$RELEASE_NAME" oci://registry.k8s.io/kueue/charts/kueue 
 kubectl rollout status deployment/kueue-controller-manager -n "$KUEUE_NAMESPACE" --timeout=300s
 
 info "Kueue install complete."
-info "Pods annotated with kueue.x-k8s.io/queue-name=<queue> will be queued by Kueue."
+info "Pods labeled with kueue.x-k8s.io/queue-name=<queue> will be queued by Kueue."
 info "The Airflow pod template in helm/pod_template.yaml already adds this label (if you are using it)."
