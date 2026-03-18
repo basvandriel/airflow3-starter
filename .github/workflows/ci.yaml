@@ -77,9 +77,31 @@ jobs:
             -l "release=${CHART_NAME}" \
             --for=condition=Ready --timeout=5m || true
 
-      - name: Install Kueue
+      - name: Install Kueue (helm)
         run: |
-          AIRFLOW_NAMESPACE=$NAMESPACE bash scripts/install_kueue.sh "$NAMESPACE"
+          helm upgrade --install kueue oci://registry.k8s.io/kueue/charts/kueue \
+            --version 0.16.2 \
+            --namespace kueue-system --create-namespace \
+            --values helm/kueue-values.yaml
+
+      - name: Wait for Kueue controller rollout
+        run: |
+          kubectl rollout status deployment/kueue-controller-manager \
+            -n kueue-system --timeout=300s
+
+      - name: Wait for Kueue webhook endpoint
+        run: |
+          echo "Waiting for Kueue webhook endpoint to be ready..."
+          until kubectl get endpoints/kueue-webhook-service -n kueue-system \
+              -o jsonpath='{.subsets[0].addresses[0].ip}' 2>/dev/null | grep -qE '^[0-9]'; do
+            sleep 2
+          done
+          echo "Webhook endpoint ready."
+
+      - name: Apply Kueue resources (ClusterQueue + LocalQueue)
+        run: |
+          sed "s|namespace: \"airflow-dev\"|namespace: \"$NAMESPACE\"|g" \
+            helm/kueue-resources.yaml | kubectl apply -f -
 
       - name: Run pytest
         run: |
