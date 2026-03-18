@@ -9,7 +9,6 @@ from kubernetes.client.exceptions import ApiException
 from tests.utils import exec_in_pod
 
 
-
 def test_kueue_e2e_gates_second_pod(k8s: CoreV1Api, namespace: str, e2e: bool) -> None:
     if not e2e:
         pytest.skip("--e2e not set")
