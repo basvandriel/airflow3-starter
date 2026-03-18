@@ -100,8 +100,18 @@ jobs:
 
       - name: Apply Kueue resources (ClusterQueue + LocalQueue)
         run: |
-          sed "s|namespace: \"airflow-dev\"|namespace: \"$NAMESPACE\"|g" \
-            helm/kueue-resources.yaml | kubectl apply -f -
+          # The endpoint IP being registered doesn't guarantee the webhook TLS cert
+          # is fully loaded — retry the apply until it succeeds (idempotent).
+          deadline=$((SECONDS + 120))
+          until sed "s|namespace: \"airflow-dev\"|namespace: \"$NAMESPACE\"|g" \
+              helm/kueue-resources.yaml | kubectl apply -f -; do
+            if [ $SECONDS -ge $deadline ]; then
+              echo "Timed out waiting for Kueue webhook to accept requests"
+              exit 1
+            fi
+            echo "Webhook not ready yet, retrying in 5s..."
+            sleep 5
+          done
 
       - name: Run unit tests
         run: |
