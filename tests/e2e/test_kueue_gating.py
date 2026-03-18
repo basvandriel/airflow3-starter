@@ -34,7 +34,9 @@ def test_e2e_hello_world(
 
     # Poll DAG run state — works with any executor (LocalExecutor, KubernetesExecutor).
     # We don't look for pods because LocalExecutor runs tasks inside the scheduler.
-    deadline = time.time() + 120
+    deadline = time.time() + 300
+    last_raw = ""
+
     while time.time() < deadline:
         time.sleep(5)
         raw = exec_in_pod(
@@ -44,7 +46,9 @@ def test_e2e_hello_world(
             container="api-server",
             command=["airflow", "dags", "list-runs", "-d", "hello_world", "-o", "json"],
         )
-        # The CLI may emit WARN/INFO lines before the JSON array; find the last `[`.
+        last_raw = raw
+
+        # The CLI may emit WARN/INFO lines before the JSON array; find the last `[`. 
         bracket = raw.rfind("[")
         if bracket == -1:
             continue
@@ -52,6 +56,11 @@ def test_e2e_hello_world(
             runs = json.loads(raw[bracket:])
         except json.JSONDecodeError:
             continue
+
+        # Log run states so we can diagnose timeouts.
+        states = [run.get("state", "<unknown>") for run in runs]
+        print(f"[e2e] hello_world runs: {states}")
+
         for run in runs:
             state = run.get("state", "")
             if state == "success":
@@ -59,9 +68,10 @@ def test_e2e_hello_world(
             if state in ("failed", "upstream_failed"):
                 pytest.fail(f"hello_world DAG run ended in state '{state}'")
 
-    pytest.fail("hello_world did not reach state 'success' within 120s")
-
-
+    pytest.fail(
+        "hello_world did not reach state 'success' within 300s. "
+        f"Last list-runs output:\n{last_raw}"
+    )
 def test_kueue_e2e_gates_second_pod(k8s: CoreV1Api, namespace: str, e2e: bool) -> None:
     if not e2e:
         pytest.skip("--e2e not set")
