@@ -8,7 +8,6 @@ WORKDIR /home/airflow
 
 USER airflow
 
-RUN pip install apache-airflow==3.2.0 --user --no-cache-dir
 RUN pip install --user --no-cache-dir uv
 
 RUN uv sync --locked
