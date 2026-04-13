@@ -108,3 +108,6 @@ docker-compose-shell:
 
 docker-compose-reset-db:
 	docker compose exec airflow-worker airflow db reset --yes
+
+docker-compose-logs:
+	docker compose logs --no-color --timestamps --since 5m > compose.log
