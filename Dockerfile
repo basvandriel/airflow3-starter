@@ -7,8 +7,11 @@ COPY --chown=airflow:root pyproject.toml uv.lock /home/airflow/
 WORKDIR /home/airflow
 
 USER airflow
+
+RUN pip install apache-airflow==3.2.0 --user --no-cache-dir
 RUN pip install --user --no-cache-dir uv
-RUN uv sync --active --locked
+
+RUN uv sync --locked
 
 # Copy DAGs into the image for production deployments.
 # For local/dev, DAGs are mounted from a PVC instead (see helm/values.yaml).
