@@ -13,3 +13,6 @@ wheels/
 workdir/
 logs
 .env
+
+
+compose.log
