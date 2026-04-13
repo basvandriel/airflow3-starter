@@ -102,3 +102,9 @@ test-prod-e2e:
 	  --chart-name $(PROD_CHART_NAME) \
 	  --expect-custom-image \
 	  --e2e
+
+docker-compose-shell:
+	docker compose run --rm --entrypoint /bin/bash airflow-cli
+
+docker-compose-reset-db:
+	docker compose exec airflow-worker airflow db reset --yes

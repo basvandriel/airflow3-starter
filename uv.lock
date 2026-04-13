@@ -191,13 +191,11 @@ dependencies = [
     { name = "aiohttp" },
     { name = "apache-airflow" },
     { name = "kubernetes" },
-    { name = "pytest" },
 ]
 
 [package.dev-dependencies]
 dev = [
     { name = "debugpy" },
-    { name = "kubernetes" },
     { name = "pytest" },
 ]
 
@@ -206,14 +204,12 @@ requires-dist = [
     { name = "aiohttp", specifier = ">=3.9.0" },
     { name = "apache-airflow", specifier = ">=3.1.6" },
     { name = "kubernetes", specifier = ">=35.0.0" },
-    { name = "pytest", specifier = ">=9.0.2" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "debugpy", specifier = ">=1.8.20" },
-    { name = "kubernetes", specifier = ">=35.0.0" },
-    { name = "pytest", specifier = ">=8.0" },
+    { name = "pytest", specifier = ">=9.0.2" },
 ]
 
 [[package]]
