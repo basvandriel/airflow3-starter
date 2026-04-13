@@ -10,7 +10,7 @@ USER airflow
 
 RUN pip install --user --no-cache-dir uv
 
-RUN uv sync --locked
+RUN uv sync --locked --system --no-dev
 
 # Copy DAGs into the image for production deployments.
 # For local/dev, DAGs are mounted from a PVC instead (see helm/values.yaml).
